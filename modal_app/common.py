@@ -48,7 +48,13 @@ train_image = (
         # Memory-efficient kernels (chunked cross-entropy, fused RMSNorm, etc.)
         # so we can train Qwen3.5 at seq 32K within H100-80GB.
         "liger-kernel",
+        # FlashAttention 2 -- essential for sub-O(L^2) attention at seq 32K.
+        # Without it Qwen3.5's SDPA falls back to math kernel = ~10x slower.
+        "ninja", "packaging", "wheel",
     )
+    # flash-attn needs torch installed first (it builds against torch headers)
+    # so we put it in a separate pip_install call after the main stack.
+    .pip_install("flash-attn", extra_options="--no-build-isolation")
     .env({"HF_HOME": HF_CACHE, "TOKENIZERS_PARALLELISM": "false"})
     .add_local_python_source("common")
 )

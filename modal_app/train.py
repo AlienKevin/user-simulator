@@ -55,14 +55,17 @@ def train(
     data_subdir: str = "no-chunk",
     base_model: str = "Qwen/Qwen3.5-9B",
     run_name: str = "qwen35-9b-marcus-sa-v1",
-    epochs: float = 3.0,
+    # 1 epoch keeps total wall-clock under $50 budget. Empirically ~850s/step
+    # at seq 32K with FA2 + packing on H100. Packing reduces to ~23 steps total.
+    epochs: float = 1.0,
     lr: float = 2e-4,
     seq_len: int = 32768,
     micro_batch: int = 1,
-    grad_accum: int = 8,
+    grad_accum: int = 2,
     lora_r: int = 64,
     lora_alpha: int = 32,
     warmup_ratio: float = 0.03,
+    grad_ckpt: bool = True,  # set False to try the no-checkpoint path (2x faster if VRAM fits)
 ):
     import torch
     from datasets import load_dataset
@@ -100,15 +103,33 @@ def train(
     original_chat_template = tok.chat_template
     tok.chat_template = QWEN_TEMPLATE_WITH_GENERATION
 
-    model = AutoModelForCausalLM.from_pretrained(
-        base_model,
-        torch_dtype=torch.bfloat16,
-        attn_implementation="sdpa",
-        token=os.environ["HF_TOKEN"],
-        trust_remote_code=True,
-    )
+    # Try FlashAttention 2 first; fall back to SDPA if Qwen3.5 doesn't have an FA2
+    # path. SDPA at seq 32K on a 9B with the Qwen3.5 attention variant lands at
+    # ~87s per fwd+bwd vs ~10-20s expected with FA2.
+    attn_impl = "flash_attention_2"
+    try:
+        model = AutoModelForCausalLM.from_pretrained(
+            base_model,
+            torch_dtype=torch.bfloat16,
+            attn_implementation=attn_impl,
+            token=os.environ["HF_TOKEN"],
+            trust_remote_code=True,
+        )
+    except (ValueError, ImportError) as e:
+        print(f"[train] FA2 unavailable for this model ({e}); falling back to sdpa")
+        attn_impl = "sdpa"
+        model = AutoModelForCausalLM.from_pretrained(
+            base_model,
+            torch_dtype=torch.bfloat16,
+            attn_implementation=attn_impl,
+            token=os.environ["HF_TOKEN"],
+            trust_remote_code=True,
+        )
+    actual_impl = getattr(model.config, "_attn_implementation", "unknown")
+    print(f"[train] attn_implementation requested={attn_impl} actual={actual_impl}")
     model.config.use_cache = False
-    model.gradient_checkpointing_enable()
+    if grad_ckpt:
+        model.gradient_checkpointing_enable()
     model.enable_input_require_grads()
 
     # --- LoRA ---
@@ -147,11 +168,14 @@ def train(
         save_total_limit=1,
         report_to=["tensorboard"],
         logging_dir=str(log_dir),
-        gradient_checkpointing=True,
-        gradient_checkpointing_kwargs={"use_reentrant": False},
+        gradient_checkpointing=grad_ckpt,
+        gradient_checkpointing_kwargs={"use_reentrant": False} if grad_ckpt else None,
         dataset_num_proc=4,
         dataloader_num_workers=2,
-        packing=False,
+        # Packing concatenates multiple short sessions into one max_length window
+        # with proper attention masking, eliminating pad-token compute. With our
+        # avg session ~14k tokens, packing roughly doubles throughput at seq 32K.
+        packing=True,
         remove_unused_columns=True,
         assistant_only_loss=True,  # mask loss on system+user-role tokens
         use_liger_kernel=True,     # chunked CE + fused RMSNorm; required so the
@@ -248,8 +272,9 @@ def main(
     data_subdir: str = "no-chunk",
     base_model: str = "Qwen/Qwen3.5-9B",
     run_name: str = "qwen35-9b-marcus-sa-v1",
-    epochs: float = 3.0,
+    epochs: float = 1.0,
     seq_len: int = 32768,
+    grad_ckpt: bool = False,
 ):
     print(
         train.remote(
@@ -259,5 +284,6 @@ def main(
             run_name=run_name,
             epochs=epochs,
             seq_len=seq_len,
+            grad_ckpt=grad_ckpt,
         )
     )
