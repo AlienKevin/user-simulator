@@ -1,11 +1,18 @@
-"""SFT training: Qwen3-8B with LoRA on marcus-sa user simulator data.
+"""SFT training: Qwen + LoRA on marcus-sa user simulator data.
 
-Approach: standard SFT, loss masked on assistant turns only, using TRL's
-SFTTrainer with completions_only via the assistant_loss feature. We use
-peft LoRA r=64 on all linear layers + embed_tokens + lm_head. LR=2e-4 cosine,
-3 epochs, effective batch 32 (micro=2, grad_accum=16), seq 4096, bf16.
+Defaults are tuned for the Qwen3.5-9B run with seq 32K, no chunking, and proper
+assistant-only loss. The Qwen2.5-7B-Instruct v1 run can still be reproduced by
+flipping `base_model`, `seq_len`, `epochs`, and `out_subdir`.
 
-Saves merged-into-fp16 weights to /vol/ckpt/<run_name>/ for vLLM serving.
+Approach:
+- standard SFT with TRL SFTTrainer
+- assistant_only_loss=True (TRL >= 0.14): loss masked on system+user-role tokens
+- chat template patched to wrap assistant content in {% generation %} so TRL's
+  mask computation works; original template restored before save for serving
+- enable_thinking=False at training (and serve) time so the model is trained to
+  emit raw JSON with no <think>...</think> preamble
+- peft LoRA r=64 on attention + MLP projections
+- merge LoRA into bf16 weights before saving for vLLM
 """
 import json
 import os
@@ -17,42 +24,51 @@ import modal
 from common import app, train_image, volume, VOL_MOUNT, DATA_DIR, CKPT_DIR
 
 
+# Qwen-family chat template with TRL {% generation %} markers around assistant
+# content. Identical token sequence to the standard Qwen3 template when
+# enable_thinking=False (no <think>...</think> insertion).
+QWEN_TEMPLATE_WITH_GENERATION = (
+    "{%- for message in messages %}"
+    "<|im_start|>{{ message['role'] }}\n"
+    "{%- if message['role'] == 'assistant' %}"
+    "{% generation %}{{ message['content'] }}{% endgeneration %}"
+    "{%- else %}"
+    "{{ message['content'] }}"
+    "{%- endif %}"
+    "<|im_end|>\n"
+    "{%- endfor %}"
+    "{%- if add_generation_prompt %}<|im_start|>assistant\n{%- endif %}"
+)
+
+
 @app.function(
     image=train_image,
     volumes={VOL_MOUNT: volume},
     secrets=[modal.Secret.from_name("huggingface")],
-    gpu="A100-80GB",
+    gpu="H100",  # 80GB; needed for 9B + seq 32K. A100-80GB tries to fit but margin is thin.
     timeout=60 * 60 * 6,
     cpu=8,
-    memory=64 * 1024,
+    memory=96 * 1024,
 )
 def train(
     user_id: str = "marcus-sa",
-    # Qwen2.5-7B-Instruct: Apache-2.0, 32K context, no <think> blocks (simpler
-    # for JSON-only output than Qwen3), well-supported by vLLM. Qwen3-8B is
-    # newer/better but its default thinking-mode complicates serving.
-    base_model: str = "Qwen/Qwen2.5-7B-Instruct",
-    run_name: str = "qwen25-7b-marcus-sa-v1",
-    # 1 epoch keeps training under ~1 hour on A100-80GB at seq 8192. With
-    # 1665 examples / 16 grad-accum that's ~104 optimizer steps — enough for
-    # a LoRA on this focused dataset given LR=2e-4.
-    epochs: float = 1.0,
+    data_subdir: str = "no-chunk",
+    base_model: str = "Qwen/Qwen3.5-9B",
+    run_name: str = "qwen35-9b-marcus-sa-v1",
+    epochs: float = 3.0,
     lr: float = 2e-4,
-    seq_len: int = 8192,
+    seq_len: int = 32768,
     micro_batch: int = 1,
-    grad_accum: int = 16,
+    grad_accum: int = 8,
     lora_r: int = 64,
     lora_alpha: int = 32,
     warmup_ratio: float = 0.03,
-    save_steps: int = 0,  # 0 = save only at end
 ):
     import torch
-    from datasets import load_dataset, Dataset
+    from datasets import load_dataset
     from transformers import (
         AutoTokenizer,
         AutoModelForCausalLM,
-        TrainingArguments,
-        DataCollatorForLanguageModeling,
     )
     from peft import LoraConfig, get_peft_model, TaskType, PeftModel
     from trl import SFTTrainer, SFTConfig
@@ -66,7 +82,7 @@ def train(
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # --- data ---
-    data_dir = Path(DATA_DIR) / user_id
+    data_dir = Path(DATA_DIR) / user_id / data_subdir if data_subdir else Path(DATA_DIR) / user_id
     train_path = str(data_dir / "train.jsonl")
     val_path = str(data_dir / "val.jsonl")
     print(f"[train] loading data: {train_path}")
@@ -76,20 +92,20 @@ def train(
 
     # --- tokenizer / model ---
     print(f"[train] loading tokenizer + model: {base_model}")
-    tok = AutoTokenizer.from_pretrained(base_model, token=os.environ["HF_TOKEN"])
+    tok = AutoTokenizer.from_pretrained(base_model, token=os.environ["HF_TOKEN"], trust_remote_code=True)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
 
-    # Note: TRL 0.12.1 doesn't support assistant_only_loss. We train with the
-    # default Qwen2.5 chat template and full-sequence loss. Loss on user/system
-    # tokens is suboptimal but still trains the model to emit JSON at the right
-    # spot. Upgrading TRL would let us mask user-tokens, but adds complexity.
+    # Patch chat template for assistant-only loss; keep original for serving restore.
+    original_chat_template = tok.chat_template
+    tok.chat_template = QWEN_TEMPLATE_WITH_GENERATION
 
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         torch_dtype=torch.bfloat16,
         attn_implementation="sdpa",
         token=os.environ["HF_TOKEN"],
+        trust_remote_code=True,
     )
     model.config.use_cache = False
     model.gradient_checkpointing_enable()
@@ -111,7 +127,7 @@ def train(
     model = get_peft_model(model, lora_cfg)
     model.print_trainable_parameters()
 
-    # --- SFT config ---
+    # --- SFT config (TRL >= 0.14 supports assistant_only_loss) ---
     sft_cfg = SFTConfig(
         output_dir=str(out_dir / "adapter"),
         run_name=run_name,
@@ -122,14 +138,13 @@ def train(
         learning_rate=lr,
         lr_scheduler_type="cosine",
         warmup_ratio=warmup_ratio,
-        max_seq_length=seq_len,
+        max_length=seq_len,
         bf16=True,
-        logging_steps=5,
+        logging_steps=1,
         eval_strategy="steps",
-        eval_steps=50,
-        save_strategy="epoch" if save_steps == 0 else "steps",
-        save_steps=save_steps if save_steps > 0 else None,
-        save_total_limit=2,
+        eval_steps=20,
+        save_strategy="epoch",
+        save_total_limit=1,
         report_to=["tensorboard"],
         logging_dir=str(log_dir),
         gradient_checkpointing=True,
@@ -138,36 +153,12 @@ def train(
         dataloader_num_workers=2,
         packing=False,
         remove_unused_columns=True,
+        assistant_only_loss=True,  # mask loss on system+user-role tokens
         max_grad_norm=1.0,
         weight_decay=0.0,
         optim="adamw_torch",
         seed=42,
     )
-
-    # TRL 0.12 doesn't auto-detect the messages format → flatten with the
-    # tokenizer's chat template into a single "text" field up front.
-    def to_text(examples):
-        texts = []
-        for msgs in examples["messages"]:
-            text = tok.apply_chat_template(
-                msgs, tokenize=False, add_generation_prompt=False
-            )
-            texts.append(text)
-        return {"text": texts}
-
-    train_ds = train_ds.map(
-        to_text,
-        batched=True,
-        remove_columns=[c for c in train_ds.column_names if c != "text"],
-        num_proc=4,
-    )
-    val_ds = val_ds.map(
-        to_text,
-        batched=True,
-        remove_columns=[c for c in val_ds.column_names if c != "text"],
-        num_proc=4,
-    )
-    print(f"[train] formatted to text. example length (chars): {len(train_ds[0]['text'])}")
 
     trainer = SFTTrainer(
         model=model,
@@ -177,22 +168,34 @@ def train(
         processing_class=tok,
     )
 
+    # Sanity-check the assistant-only mask on example 0
+    try:
+        s = trainer.train_dataset[0]
+        if "labels" in s:
+            import numpy as np
+            labels = np.array(s["labels"])
+            n_pred = int((labels != -100).sum())
+            n_tot = int(len(labels))
+            print(f"[train] mask sample0: {n_pred}/{n_tot} pred tokens ({n_pred/max(n_tot,1):.1%})")
+    except Exception as e:
+        print(f"[train] mask check skipped: {e}")
+
     t0 = time.time()
     trainer.train()
     dt = time.time() - t0
     print(f"[train] training done in {dt/60:.1f} min")
 
-    # Save adapter
+    # Restore the standard chat template so vLLM serves a parseable Jinja
+    # template (the {% generation %} extension isn't available at inference).
+    tok.chat_template = original_chat_template
+
     adapter_dir = out_dir / "adapter"
     trainer.save_model(str(adapter_dir))
     tok.save_pretrained(str(adapter_dir))
     print(f"[train] adapter saved to {adapter_dir}")
 
-    # Merge LoRA into base for vLLM (vLLM 0.6.4 supports LoRA adapters, but
-    # merging gives the simplest serving path).
     print("[train] merging LoRA into base model for serving...")
-    del model
-    del trainer
+    del model, trainer
     torch.cuda.empty_cache()
 
     base = AutoModelForCausalLM.from_pretrained(
@@ -200,28 +203,30 @@ def train(
         torch_dtype=torch.bfloat16,
         attn_implementation="sdpa",
         token=os.environ["HF_TOKEN"],
+        trust_remote_code=True,
     )
-    merged = PeftModel.from_pretrained(base, str(adapter_dir))
-    merged = merged.merge_and_unload()
+    merged = PeftModel.from_pretrained(base, str(adapter_dir)).merge_and_unload()
     merged_dir = out_dir / "merged"
     merged.save_pretrained(str(merged_dir), safe_serialization=True)
     tok.save_pretrained(str(merged_dir))
     print(f"[train] merged model saved to {merged_dir}")
 
-    # Write a meta file
     with open(out_dir / "meta.json", "w") as f:
         json.dump(
             {
                 "run_name": run_name,
                 "base_model": base_model,
                 "user_id": user_id,
+                "data_subdir": data_subdir,
                 "epochs": epochs,
                 "lr": lr,
-                "lora_r": lora_r,
-                "lora_alpha": lora_alpha,
                 "seq_len": seq_len,
                 "micro_batch": micro_batch,
                 "grad_accum": grad_accum,
+                "lora_r": lora_r,
+                "lora_alpha": lora_alpha,
+                "assistant_only_loss": True,
+                "enable_thinking_at_serve": False,
                 "train_examples": len(train_ds),
                 "val_examples": len(val_ds),
                 "training_seconds": dt,
@@ -238,12 +243,19 @@ def train(
 @app.local_entrypoint()
 def main(
     user_id: str = "marcus-sa",
-    base_model: str = "Qwen/Qwen2.5-7B-Instruct",
-    run_name: str = "qwen25-7b-marcus-sa-v1",
-    epochs: float = 1.0,
+    data_subdir: str = "no-chunk",
+    base_model: str = "Qwen/Qwen3.5-9B",
+    run_name: str = "qwen35-9b-marcus-sa-v1",
+    epochs: float = 3.0,
+    seq_len: int = 32768,
 ):
     print(
         train.remote(
-            user_id=user_id, base_model=base_model, run_name=run_name, epochs=epochs
+            user_id=user_id,
+            data_subdir=data_subdir,
+            base_model=base_model,
+            run_name=run_name,
+            epochs=epochs,
+            seq_len=seq_len,
         )
     )

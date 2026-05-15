@@ -25,21 +25,19 @@ data_image = (
     .add_local_python_source("common")
 )
 
-# Heavy image for training: CUDA + torch + trl + peft
+# Heavy image for training: CUDA + torch + trl + peft (Qwen3.5 needs newer transformers)
 train_image = (
     modal.Image.from_registry("nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04", add_python="3.11")
     .apt_install("git", "build-essential")
     .pip_install(
         "torch==2.5.1",
-        "transformers==4.46.3",
-        "accelerate==1.1.1",
-        "peft==0.13.2",
-        "trl==0.12.1",
+        "transformers==4.49.0",   # Qwen3 family support + chat-template generation tokens mask
+        "accelerate==1.3.0",
+        "peft==0.14.0",
+        "trl==0.14.0",            # adds SFTConfig(assistant_only_loss=...)
         "datasets==4.4.1",
-        "bitsandbytes==0.44.1",
-        "deepspeed==0.15.4",
+        "bitsandbytes==0.45.0",
         "huggingface_hub==0.36.0",
-        "wandb==0.18.7",
         "tensorboard==2.18.0",
         "sentencepiece==0.2.0",
         "tiktoken==0.8.0",

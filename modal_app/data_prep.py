@@ -146,6 +146,7 @@ def prepare(
     max_steps_per_example: int = 10,
     text_trunc_chars: int = 800,
     task_trunc_chars: int = 600,
+    out_subdir: str = "",
 ):
     import pandas as pd
     from datasets import load_dataset
@@ -374,7 +375,7 @@ def prepare(
     train = examples[val_n:]
     print(f"[prep] train={len(train)} | val={len(val)}")
 
-    out_dir = Path(DATA_DIR) / user_id
+    out_dir = Path(DATA_DIR) / user_id / out_subdir if out_subdir else Path(DATA_DIR) / user_id
     out_dir.mkdir(parents=True, exist_ok=True)
     with open(out_dir / "train.jsonl", "w") as f:
         for ex in train:
@@ -402,5 +403,17 @@ def prepare(
 
 
 @app.local_entrypoint()
-def main(user_id: str = "marcus-sa"):
-    print(prepare.remote(user_id=user_id))
+def main(
+    user_id: str = "marcus-sa",
+    max_steps_per_example: int = 10,
+    text_trunc_chars: int = 800,
+    task_trunc_chars: int = 600,
+    out_subdir: str = "",
+):
+    print(prepare.remote(
+        user_id=user_id,
+        max_steps_per_example=max_steps_per_example,
+        text_trunc_chars=text_trunc_chars,
+        task_trunc_chars=task_trunc_chars,
+        out_subdir=out_subdir,
+    ))
