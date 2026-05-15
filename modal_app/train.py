@@ -154,6 +154,8 @@ def train(
         packing=False,
         remove_unused_columns=True,
         assistant_only_loss=True,  # mask loss on system+user-role tokens
+        use_liger_kernel=True,     # chunked CE + fused RMSNorm; required so the
+                                   # [1, 32K, 152K] logit tensor doesn't OOM the H100
         max_grad_norm=1.0,
         weight_decay=0.0,
         optim="adamw_torch",

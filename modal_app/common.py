@@ -31,17 +31,23 @@ train_image = (
     .apt_install("git", "build-essential")
     .pip_install(
         "torch==2.5.1",
-        "transformers==4.49.0",   # Qwen3 family support + chat-template generation tokens mask
-        "accelerate==1.3.0",
-        "peft==0.14.0",
-        "trl==0.14.0",            # adds SFTConfig(assistant_only_loss=...)
-        "datasets==4.4.1",
-        "bitsandbytes==0.45.0",
-        "huggingface_hub==0.36.0",
-        "tensorboard==2.18.0",
-        "sentencepiece==0.2.0",
-        "tiktoken==0.8.0",
-        "protobuf==5.28.3",
+        # Qwen3.5 (model_type=qwen3_5) is newer than any tagged transformers
+        # release; install from main and let pip resolve compatible versions
+        # of the surrounding stack.
+        "transformers @ git+https://github.com/huggingface/transformers.git@main",
+        "accelerate",
+        "peft",
+        "trl",
+        "datasets",
+        "bitsandbytes",
+        "huggingface_hub",
+        "tensorboard",
+        "sentencepiece",
+        "tiktoken",
+        "protobuf",
+        # Memory-efficient kernels (chunked cross-entropy, fused RMSNorm, etc.)
+        # so we can train Qwen3.5 at seq 32K within H100-80GB.
+        "liger-kernel",
     )
     .env({"HF_HOME": HF_CACHE, "TOKENIZERS_PARALLELISM": "false"})
     .add_local_python_source("common")

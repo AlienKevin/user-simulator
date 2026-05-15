@@ -27,7 +27,7 @@ def _vllm_cmd(model_path: str) -> list[str]:
         "--port", "8000",
         "--host", "0.0.0.0",
         "--api-key", API_KEY,
-        "--max-model-len", "16384",
+        "--max-model-len", "32768",
         "--gpu-memory-utilization", "0.92",
         "--dtype", "bfloat16",
         "--enable-prefix-caching",
