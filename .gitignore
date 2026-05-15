@@ -1,0 +1,9 @@
+with-user-repo/
+data_cache/
+**/__pycache__/
+*.pyc
+.env
+.env.*
+*.bak
+.DS_Store
+scripts/

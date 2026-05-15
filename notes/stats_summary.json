@@ -1,0 +1,59 @@
+{
+  "total_sessions": 5851,
+  "total_conv_rows": 2692480,
+  "conversational_rows": 104166,
+  "unique_users": 189,
+  "sessions_with_null_user": 1943,
+  "per_session_overall": {
+    "n_rows": {
+      "count": 5825.0,
+      "mean": 462.2283261802575,
+      "std": 2466.142681740933,
+      "min": 1.0,
+      "25%": 51.0,
+      "50%": 160.0,
+      "75%": 426.0,
+      "max": 137991.0
+    },
+    "user_msgs": {
+      "count": 5825.0,
+      "mean": 13.307811158798284,
+      "std": 25.1627228110112,
+      "min": 0.0,
+      "25%": 3.0,
+      "50%": 7.0,
+      "75%": 13.0,
+      "max": 645.0
+    },
+    "assistant_msgs": {
+      "count": 5825.0,
+      "mean": 9.197596566523606,
+      "std": 25.68512968781078,
+      "min": 0.0,
+      "25%": 2.0,
+      "50%": 4.0,
+      "75%": 10.0,
+      "max": 686.0
+    },
+    "total_tokens": {
+      "count": 5825.0,
+      "mean": 7842.509184549356,
+      "std": 111489.39795506038,
+      "min": 0.0,
+      "25%": 28.0,
+      "50%": 466.0,
+      "75%": 2215.0,
+      "max": 6071024.0
+    }
+  },
+  "top_user": {
+    "user_id": "marcus-sa",
+    "n_sessions": 450,
+    "n_conv_rows": 297282,
+    "user_msgs": 7711,
+    "assistant_msgs": 2689,
+    "avg_user_msgs_per_sess": 17.135555555555555,
+    "avg_assistant_msgs_per_sess": 5.975555555555555,
+    "median_total_tokens_per_sess": 4.0
+  }
+}
