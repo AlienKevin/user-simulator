@@ -7,3 +7,7 @@ data_cache/
 *.bak
 .DS_Store
 scripts/
+web/node_modules/
+web/.next/
+web/out/
+.vercel
