@@ -1247,76 +1247,32 @@ function AgentJudgeFront({
                 cmp.line_metrics.best_threshold?.recall ??
                 0
             )}
-            .
+            . Where the two metrics disagree at those cutoffs (
+            {cmp.disagreements.length} pairs), the agent matches ground truth{" "}
+            {agentWins.length}× vs line-Jaccard {lineWins.length}×.
           </div>
 
-          <h3 className="text-sm font-semibold mb-2">
-            Disagreements at each metric&apos;s best threshold (
-            {cmp.disagreements.length})
-          </h3>
-          <div className="rounded-lg border border-zinc-200 bg-white overflow-hidden mb-4">
-            <table className="w-full text-xs">
-              <thead className="bg-zinc-50 text-zinc-600 text-[10px] uppercase tracking-wide">
-                <tr>
-                  <th className="text-left px-3 py-2 font-medium">pair</th>
-                  <th className="text-right px-3 py-2 font-medium">line-J</th>
-                  <th className="text-right px-3 py-2 font-medium">agent</th>
-                  <th className="text-right px-3 py-2 font-medium">test-out J</th>
-                  <th className="px-3 py-2 font-medium">truth</th>
-                  <th className="px-3 py-2 font-medium">winner</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cmp.disagreements.map((d, i) => (
-                  <tr key={i} className="border-t border-zinc-100 align-top">
-                    <td className="px-3 py-2">
-                      <div className="font-mono text-[11px]">
-                        {d.a.slice(0, 8)} ↔ {d.b.slice(0, 8)}
-                      </div>
-                      <div className="text-[10px] text-zinc-500">
-                        {kindLabel(d.kind)} · {d.task}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      {d.line_jaccard.toFixed(2)}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums font-medium">
-                      {d.agent_similarity.toFixed(2)}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums text-zinc-500">
-                      {d.test_outcome_jaccard.toFixed(2)}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                          d.truth === "equiv"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-rose-100 text-rose-800"
-                        }`}
-                      >
-                        {d.truth}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${
-                          d.winner === "agent"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-zinc-200 text-zinc-700"
-                        }`}
-                      >
-                        {d.winner}
-                      </span>
-                    </td>
-                  </tr>
+          {cmp.disagreements.length > 0 && (
+            <details className="rounded-lg border border-zinc-200 bg-white mb-4">
+              <summary className="px-4 py-2 cursor-pointer text-sm text-zinc-600">
+                Example disagreements ({Math.min(3, cmp.disagreements.length)} of{" "}
+                {cmp.disagreements.length})
+              </summary>
+              <div className="border-t border-zinc-100 px-4 py-3 space-y-3">
+                {cmp.disagreements.slice(0, 3).map((d, i) => (
+                  <div key={i} className="text-xs leading-relaxed">
+                    <div className="font-mono text-[11px] text-zinc-700">
+                      {d.task} · {kindLabel(d.kind)} · winner: {d.winner}
+                    </div>
+                    <div className="text-zinc-500 mt-0.5">
+                      line-J {d.line_jaccard.toFixed(2)} · agent{" "}
+                      {d.agent_similarity.toFixed(2)} · truth {d.truth}
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="text-xs text-zinc-500 mb-4">
-            Agent right {agentWins.length}×, line-Jaccard right {lineWins.length}×
-            when the two metrics disagree.
-          </p>
+              </div>
+            </details>
+          )}
 
           <details className="rounded-lg border border-zinc-200 bg-white">
             <summary className="px-4 py-2 cursor-pointer text-sm font-medium text-zinc-700">
