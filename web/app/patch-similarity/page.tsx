@@ -141,7 +141,6 @@ type AgentCompareAtThreshold = {
 type AgentCompareSide = {
   auc: number | null;
   at_best_threshold: AgentCompareAtThreshold;
-  at_half: AgentCompareAtThreshold;
 };
 
 type AgentJudgeCompare = {
@@ -153,11 +152,10 @@ type AgentJudgeCompare = {
   agent_metrics: AgentCompareMetrics;
   comparison: {
     ground_truth: string;
+    threshold_note?: string;
     line_jaccard: AgentCompareSide;
     agent_judge: AgentCompareSide;
   };
-  line_at_half: { precision: number; recall: number; accuracy: number };
-  agent_at_half: { precision: number; recall: number; accuracy: number };
   pairs: AgentComparePair[];
   disagreements: AgentCompareDisagreement[];
 };
@@ -1091,54 +1089,34 @@ function AgentJudgeMetricsTable({ cmp }: { cmp: AgentJudgeCompare }) {
   const fmt3 = (v: number | null | undefined) =>
     v == null ? "—" : v.toFixed(3);
 
-  const line = cmp.comparison?.line_jaccard ?? {
-    auc: cmp.line_metrics.auc,
-    at_best_threshold: {
-      threshold: cmp.line_metrics.best_threshold?.threshold ?? 0.5,
-      precision: cmp.line_metrics.best_threshold?.precision ?? 0,
-      recall: cmp.line_metrics.best_threshold?.recall ?? 0,
-      accuracy: 0,
-      balanced_accuracy: cmp.line_metrics.best_threshold?.balanced_accuracy,
-    },
-    at_half: {
-      threshold: 0.5,
-      precision: cmp.line_at_half.precision,
-      recall: cmp.line_at_half.recall,
-      accuracy: cmp.line_at_half.accuracy,
-    },
-  };
-  const agent = cmp.comparison?.agent_judge ?? {
-    auc: cmp.agent_metrics.auc,
-    at_best_threshold: {
-      threshold: cmp.agent_metrics.best_threshold?.threshold ?? 0.5,
-      precision: cmp.agent_metrics.best_threshold?.precision ?? 0,
-      recall: cmp.agent_metrics.best_threshold?.recall ?? 0,
-      accuracy: 0,
-      balanced_accuracy: cmp.agent_metrics.best_threshold?.balanced_accuracy,
-    },
-    at_half: {
-      threshold: 0.5,
-      precision: cmp.agent_at_half.precision,
-      recall: cmp.agent_at_half.recall,
-      accuracy: cmp.agent_at_half.accuracy,
-    },
-  };
+  const line =
+    cmp.comparison?.line_jaccard ??
+    ({
+      auc: cmp.line_metrics.auc,
+      at_best_threshold: {
+        threshold: cmp.line_metrics.best_threshold?.threshold ?? 0,
+        precision: cmp.line_metrics.best_threshold?.precision ?? 0,
+        recall: cmp.line_metrics.best_threshold?.recall ?? 0,
+        accuracy: 0,
+        balanced_accuracy: cmp.line_metrics.best_threshold?.balanced_accuracy,
+      },
+    } as AgentCompareSide);
+  const agent =
+    cmp.comparison?.agent_judge ??
+    ({
+      auc: cmp.agent_metrics.auc,
+      at_best_threshold: {
+        threshold: cmp.agent_metrics.best_threshold?.threshold ?? 0,
+        precision: cmp.agent_metrics.best_threshold?.precision ?? 0,
+        recall: cmp.agent_metrics.best_threshold?.recall ?? 0,
+        accuracy: 0,
+        balanced_accuracy: cmp.agent_metrics.best_threshold?.balanced_accuracy,
+      },
+    } as AgentCompareSide);
 
   const rows = [
-    {
-      label: "line-Jaccard",
-      auc: line.auc,
-      best: line.at_best_threshold,
-      half: line.at_half,
-      rowClass: "",
-    },
-    {
-      label: "agent judge",
-      auc: agent.auc,
-      best: agent.at_best_threshold,
-      half: agent.at_half,
-      rowClass: "bg-emerald-50/50",
-    },
+    { label: "line-Jaccard", ...line, rowClass: "" },
+    { label: "agent judge", ...agent, rowClass: "bg-emerald-50/50" },
   ];
 
   return (
@@ -1148,40 +1126,45 @@ function AgentJudgeMetricsTable({ cmp }: { cmp: AgentJudgeCompare }) {
           <tr>
             <th className="text-left px-4 py-2 font-medium">metric</th>
             <th className="text-right px-3 py-2 font-medium">AUC</th>
-            <th className="text-right px-3 py-2 font-medium">threshold</th>
+            <th className="text-right px-3 py-2 font-medium">best thr</th>
             <th className="text-right px-3 py-2 font-medium">precision</th>
             <th className="text-right px-3 py-2 font-medium">recall</th>
-            <th className="text-right px-4 py-2 font-medium">accuracy</th>
+            <th className="text-right px-3 py-2 font-medium">bal. acc</th>
           </tr>
         </thead>
         <tbody>
-          {rows.flatMap((r) => [
-            <tr key={`${r.label}-best`} className={`border-t border-zinc-100 ${r.rowClass}`}>
+          {rows.map((r) => (
+            <tr
+              key={r.label}
+              className={`border-t border-zinc-100 ${r.rowClass}`}
+            >
               <td className="px-4 py-2 font-medium">{r.label}</td>
-              <td className="px-3 py-2 text-right tabular-nums font-semibold" rowSpan={2}>
+              <td className="px-3 py-2 text-right tabular-nums font-semibold">
                 {fmt3(r.auc)}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums text-zinc-500">
-                {fmt3(r.best.threshold)} <span className="text-[10px]">(best)</span>
+              <td className="px-3 py-2 text-right tabular-nums text-zinc-600">
+                {fmt3(r.at_best_threshold.threshold)}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums">{fmt(r.best.precision)}</td>
-              <td className="px-3 py-2 text-right tabular-nums">{fmt(r.best.recall)}</td>
-              <td className="px-4 py-2 text-right tabular-nums">{fmt(r.best.accuracy)}</td>
-            </tr>,
-            <tr key={`${r.label}-half`} className={r.rowClass}>
-              <td className="px-4 py-1 text-zinc-400 text-xs">@ fixed 0.5</td>
-              <td className="px-3 py-1 text-right tabular-nums text-zinc-500">0.500</td>
-              <td className="px-3 py-1 text-right tabular-nums">{fmt(r.half.precision)}</td>
-              <td className="px-3 py-1 text-right tabular-nums">{fmt(r.half.recall)}</td>
-              <td className="px-4 py-1 text-right tabular-nums">{fmt(r.half.accuracy)}</td>
-            </tr>,
-          ])}
+              <td className="px-3 py-2 text-right tabular-nums">
+                {fmt(r.at_best_threshold.precision)}
+              </td>
+              <td className="px-3 py-2 text-right tabular-nums">
+                {fmt(r.at_best_threshold.recall)}
+              </td>
+              <td className="px-4 py-2 text-right tabular-nums">
+                {fmt(r.at_best_threshold.balanced_accuracy ?? 0)}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
-      <div className="px-4 py-2 bg-zinc-50 border-t border-zinc-100 text-xs text-zinc-500">
-        Ground truth: {cmp.comparison?.ground_truth ?? "test_outcome_jaccard >= 0.999"}.
-        n={cmp.n_pairs} pairs ({cmp.n_positive} equivalent, {cmp.n_negative} different),
-        stratified across Jaccard buckets × outcome kind.
+      <div className="px-4 py-2 bg-zinc-50 border-t border-zinc-100 text-xs text-zinc-500 leading-relaxed">
+        Ground truth:{" "}
+        {cmp.comparison?.ground_truth ?? "test_outcome_jaccard >= 0.999"}. n=
+        {cmp.n_pairs} pairs ({cmp.n_positive} equivalent, {cmp.n_negative}{" "}
+        different).{" "}
+        {cmp.comparison?.threshold_note ??
+          "Each metric's threshold maximizes balanced accuracy on this sample."}
       </div>
     </div>
   );
@@ -1230,16 +1213,46 @@ function AgentJudgeFront({
             {fmt3(cmp.comparison?.agent_judge?.auc ?? cmp.agent_metrics.auc)} vs
             line-Jaccard{" "}
             {fmt3(cmp.comparison?.line_jaccard?.auc ?? cmp.line_metrics.auc)}.
-            At threshold 0.5 the agent recalls every equivalent pair (
-            {fmt(cmp.agent_at_half.recall)} recall) but over-merges divergent
-            fail-fail pairs (precision {fmt(cmp.agent_at_half.precision)}).
-            Line-Jaccard is near chance (AUC ~0.56) — it cannot recover
-            Direction-2 false negatives where patches look different but behave
-            the same.
+            At each metric&apos;s best threshold (line-J{" "}
+            {fmt3(
+              cmp.comparison?.line_jaccard?.at_best_threshold.threshold ??
+                cmp.line_metrics.best_threshold?.threshold
+            )}
+            , agent{" "}
+            {fmt3(
+              cmp.comparison?.agent_judge?.at_best_threshold.threshold ??
+                cmp.agent_metrics.best_threshold?.threshold
+            )}
+            ), the agent reaches{" "}
+            {fmt(
+              cmp.comparison?.agent_judge?.at_best_threshold.precision ??
+                cmp.agent_metrics.best_threshold?.precision ??
+                0
+            )}{" "}
+            precision /{" "}
+            {fmt(
+              cmp.comparison?.agent_judge?.at_best_threshold.recall ??
+                cmp.agent_metrics.best_threshold?.recall ??
+                0
+            )}{" "}
+            recall vs line-Jaccard&apos;s{" "}
+            {fmt(
+              cmp.comparison?.line_jaccard?.at_best_threshold.precision ??
+                cmp.line_metrics.best_threshold?.precision ??
+                0
+            )}{" "}
+            /{" "}
+            {fmt(
+              cmp.comparison?.line_jaccard?.at_best_threshold.recall ??
+                cmp.line_metrics.best_threshold?.recall ??
+                0
+            )}
+            .
           </div>
 
           <h3 className="text-sm font-semibold mb-2">
-            Disagreements at threshold 0.5 ({cmp.disagreements.length})
+            Disagreements at each metric&apos;s best threshold (
+            {cmp.disagreements.length})
           </h3>
           <div className="rounded-lg border border-zinc-200 bg-white overflow-hidden mb-4">
             <table className="w-full text-xs">
