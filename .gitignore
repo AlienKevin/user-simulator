@@ -6,7 +6,9 @@ data_cache/
 .env.*
 *.bak
 .DS_Store
-scripts/
+scripts/*
+!scripts/patch-reconstruction/
+!scripts/patch-reconstruction/**
 web/node_modules/
 web/.next/
 web/out/
