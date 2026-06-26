@@ -28,6 +28,7 @@ type Row = {
   approve: number;
   critical: number;
   ref?: boolean;
+  spec?: boolean; // purpose-built (OdysSim) user simulator
 };
 
 const ROWS: Row[] = [
@@ -37,6 +38,10 @@ const ROWS: Row[] = [
   { model: "gpt-5", mode: "no-profile", moveFid: 52.4, condAgree: 0.189, approve: 24.5, critical: 11.3 },
   { model: "gemini-3.1-pro", mode: "with-profile", moveFid: 41.4, condAgree: 0.333, approve: 72.2, critical: 3.7 },
   { model: "gemini-3.1-pro", mode: "no-profile", moveFid: 49.0, condAgree: 0.278, approve: 66.7, critical: 11.1 },
+  { model: "osim-8b", mode: "with-profile", moveFid: 55.8, condAgree: 0.222, approve: 42.6, critical: 16.7, spec: true },
+  { model: "osim-8b", mode: "no-profile", moveFid: 56.5, condAgree: 0.208, approve: 9.4, critical: 9.4, spec: true },
+  { model: "osim-4b", mode: "with-profile", moveFid: 48.7, condAgree: 0.259, approve: 57.4, critical: 13.0, spec: true },
+  { model: "osim-4b", mode: "no-profile", moveFid: 55.1, condAgree: 0.111, approve: 24.1, critical: 11.1, spec: true },
   { model: "prior_sampler", mode: "reference", moveFid: 84.3, condAgree: 0.185, approve: 20.4, critical: 35.2, ref: true },
   { model: "always_approve", mode: "reference", moveFid: 4.9, condAgree: 0.241, approve: 100, critical: 0, ref: true },
 ];
@@ -110,7 +115,7 @@ function Scatter() {
   const pts = ROWS.map((r) => ({
     ...r,
     cx: x(r.moveFid), cy: y(r.condAgree),
-    fill: r.ref ? "#a1a1aa" : "#3b82f6",
+    fill: r.ref ? "#a1a1aa" : r.spec ? "#8b5cf6" : "#3b82f6",
   }));
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="MoveFid versus CondAgree scatter">
@@ -144,6 +149,9 @@ function Scatter() {
           {p.model === "always_approve" && (
             <text x={p.cx + 8} y={p.cy + 3} className="fill-zinc-500 font-mono" fontSize="9.5">always-approve</text>
           )}
+          {p.model === "osim-8b" && p.mode === "no-profile" && (
+            <text x={p.cx} y={p.cy - 9} textAnchor="middle" className="fill-violet-600 font-mono" fontSize="9.5">OSim (specialized)</text>
+          )}
         </g>
       ))}
     </svg>
@@ -174,8 +182,23 @@ function Dumbbell({ from, to }: { from: number; to: number }) {
 // ---------- page ----------
 
 export default function Page() {
-  const live = ROWS.filter((r) => !r.ref);
+  const frontier = ROWS.filter((r) => !r.ref && !r.spec);
+  const spec = ROWS.filter((r) => r.spec);
   const refs = ROWS.filter((r) => r.ref);
+  const lbRow = (r: Row, i: number) => (
+    <tr key={`${r.model}-${r.mode}-${i}`} className="border-t border-zinc-100">
+      <td className="px-3 py-2"><Mono className="text-zinc-900">{r.model}</Mono></td>
+      <td className="px-3 py-2">
+        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${r.mode === "with-profile" ? "bg-blue-100 text-blue-800" : "bg-zinc-100 text-zinc-600"}`}>{r.mode}</span>
+      </td>
+      <td className="px-3 py-2 text-right"><Mono>{r.moveFid.toFixed(1)}</Mono></td>
+      <td className="px-3 py-2 text-right">
+        <Mono className={r.condAgree > LUCKY + 0.03 ? "text-emerald-700" : "text-zinc-500"}>{r.condAgree.toFixed(3)}</Mono>
+      </td>
+      <td className="px-3 py-2 text-right"><Mono className={Math.abs(r.approve - REAL.approve) <= 5 ? "text-emerald-700" : "text-zinc-900"}>{r.approve}%</Mono></td>
+      <td className="px-3 py-2 text-right"><Mono className={r.critical >= 15 ? "text-emerald-700" : "text-amber-700"}>{r.critical}%</Mono></td>
+    </tr>
+  );
 
   return (
     <div className="min-h-screen">
@@ -199,17 +222,20 @@ export default function Page() {
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-700">
             A <span className="font-semibold text-zinc-900">user simulator</span> is an AI pretending to be the
             human developer, so we can stress-test coding agents without a real person in the loop. The catch: every
-            model we tested is too agreeable. They approve more than real developers
-            (<Mono>24%</Mono> → <Mono>39–72%</Mono>) and complain far less (<Mono>33%</Mono> → <Mono>3.7–11.3%</Mono>) —
-            so any coding agent they test looks better than real users would ever let it.
+            model we tested is too agreeable. General-purpose models approve far more than real developers
+            (<Mono>24%</Mono> → <Mono>39–72%</Mono>) and complain far less (<Mono>33%</Mono> → <Mono>3.7–11.3%</Mono>).
+            The one <span className="font-semibold text-violet-700">purpose-built</span> simulator (OdysSim) does
+            better — it complains <Mono>16.7%</Mono> of the time and doesn’t over-approve — but still only reaches
+            half the real rate. Any agent these simulators test looks better than real users would let it.
           </p>
           <div className="mt-7 max-w-xl rounded-lg border border-zinc-200 bg-white p-4">
             <RateBar label="Real developers" sub="critical" value={33.3} color="bg-emerald-500" max={40} />
-            <RateBar label="Toughest AI model" sub="critical" value={11.3} color="bg-amber-500" max={40} />
+            <RateBar label="Best AI model" sub="OSim-8B" value={16.7} color="bg-violet-500" max={40} />
+            <RateBar label="Frontier models" sub="critical" value={11.3} color="bg-amber-500" max={40} />
             <p className="mt-2 text-xs text-zinc-500">
-              Real developers say <em>something’s wrong</em> on about one turn in three. The most critical AI model
-              (GPT-5, no profile) does it on roughly one in nine. The rest are gentler still. The only thing that
-              reaches the real rate is a dumb random baseline — more on that below.
+              Real developers say <em>something’s wrong</em> on about one turn in three. The purpose-built simulator
+              (OSim-8B) reaches half that; the most critical general-purpose model (GPT-5, no profile) only a third.
+              The one thing that reaches the real rate is a dumb random baseline — more on that below.
             </p>
           </div>
         </div>
@@ -297,9 +323,11 @@ export default function Page() {
         {/* VISUAL A — approve / critical comparison */}
         <Section kicker="the headline, in two pictures" title="Every model is too polite">
           <p className="mb-5 max-w-2xl text-sm text-zinc-600">
-            Read against the dashed real-developer lines. On <span className="font-semibold">approve%</span>, every live
-            model sits at or past <Mono>24%</Mono>. On <span className="font-semibold">critical%</span>, every live model
-            falls short of <Mono>33%</Mono>.
+            Read against the dashed real-developer lines. On <span className="font-semibold">approve%</span>, the
+            general-purpose models sit at or past <Mono>24%</Mono> (Gemini nearly triples it); only the purpose-built
+            <span className="text-violet-700"> OSim-8B</span>, uninstructed, dips below. On <span className="font-semibold">critical%</span>,
+            every model falls short of <Mono>33%</Mono> — <span className="text-violet-700">OSim-8B</span> comes closest at <Mono>16.7%</Mono>.
+            <span className="text-violet-600"> Violet = purpose-built simulator.</span>
           </p>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
@@ -310,6 +338,10 @@ export default function Page() {
               <RateBar label="gpt-5" sub="no profile" value={24.5} color="bg-emerald-500" baseline={REAL.approve} flag="best-calibrated" />
               <RateBar label="gemini" sub="profile" value={72.2} color="bg-amber-500" baseline={REAL.approve} />
               <RateBar label="gemini" sub="no profile" value={66.7} color="bg-amber-500" baseline={REAL.approve} />
+              <RateBar label="osim-8b" sub="profile" value={42.6} color="bg-violet-500" baseline={REAL.approve} />
+              <RateBar label="osim-8b" sub="no profile" value={9.4} color="bg-violet-500" baseline={REAL.approve} flag="under-approves" />
+              <RateBar label="osim-4b" sub="profile" value={57.4} color="bg-violet-500" baseline={REAL.approve} />
+              <RateBar label="osim-4b" sub="no profile" value={24.1} color="bg-violet-500" baseline={REAL.approve} />
               <RateBar label="prior_sampler" sub="ref" value={20.4} color="bg-zinc-300" baseline={REAL.approve} />
               <RateBar label="always_approve" sub="ref" value={100} color="bg-zinc-300" baseline={REAL.approve} />
             </div>
@@ -321,6 +353,10 @@ export default function Page() {
               <RateBar label="gpt-5" sub="no profile" value={11.3} color="bg-amber-500" baseline={REAL.critical} />
               <RateBar label="gemini" sub="profile" value={3.7} color="bg-amber-500" baseline={REAL.critical} />
               <RateBar label="gemini" sub="no profile" value={11.1} color="bg-amber-500" baseline={REAL.critical} />
+              <RateBar label="osim-8b" sub="profile" value={16.7} color="bg-violet-500" baseline={REAL.critical} flag="best live" />
+              <RateBar label="osim-8b" sub="no profile" value={9.4} color="bg-violet-500" baseline={REAL.critical} />
+              <RateBar label="osim-4b" sub="profile" value={13.0} color="bg-violet-500" baseline={REAL.critical} />
+              <RateBar label="osim-4b" sub="no profile" value={11.1} color="bg-violet-500" baseline={REAL.critical} />
               <RateBar label="prior_sampler" sub="ref" value={35.2} color="bg-zinc-400" baseline={REAL.critical} />
               <RateBar label="always_approve" sub="ref" value={0} color="bg-zinc-300" baseline={REAL.critical} />
             </div>
@@ -346,20 +382,14 @@ export default function Page() {
                 </tr>
               </thead>
               <tbody>
-                {live.map((r, i) => (
-                  <tr key={i} className="border-t border-zinc-100">
-                    <td className="px-3 py-2"><Mono className="text-zinc-900">{r.model}</Mono></td>
-                    <td className="px-3 py-2">
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${r.mode === "with-profile" ? "bg-blue-100 text-blue-800" : "bg-zinc-100 text-zinc-600"}`}>{r.mode}</span>
-                    </td>
-                    <td className="px-3 py-2 text-right"><Mono>{r.moveFid.toFixed(1)}</Mono></td>
-                    <td className="px-3 py-2 text-right">
-                      <Mono className={r.condAgree > LUCKY + 0.03 ? "text-emerald-700" : "text-zinc-500"}>{r.condAgree.toFixed(3)}</Mono>
-                    </td>
-                    <td className="px-3 py-2 text-right"><Mono className={Math.abs(r.approve - REAL.approve) <= 5 ? "text-emerald-700" : "text-zinc-900"}>{r.approve}%</Mono></td>
-                    <td className="px-3 py-2 text-right"><Mono className="text-amber-700">{r.critical}%</Mono></td>
-                  </tr>
-                ))}
+                <tr className="bg-blue-50/40">
+                  <td colSpan={6} className="px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-blue-500">general-purpose frontier models</td>
+                </tr>
+                {frontier.map(lbRow)}
+                <tr className="border-t border-zinc-200 bg-violet-50/50">
+                  <td colSpan={6} className="px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-violet-500">purpose-built user simulators — OdysSim (OSim), prior best on customer-service</td>
+                </tr>
+                {spec.map(lbRow)}
                 <tr className="border-t border-zinc-200 bg-zinc-50">
                   <td colSpan={6} className="px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-zinc-400">references — not real simulators</td>
                 </tr>
@@ -383,8 +413,8 @@ export default function Page() {
             <Mono className="text-zinc-600">critical% = pushback + interrupt + bug report</Mono>; all percentages are out of
             54 moments (so 11% ≈ 6 turns). No single column names a winner: the highest CondAgree is with-profile Gemini
             (<Mono>0.333</Mono>) — yet it approves <Mono>72.2%</Mono>. The highest MoveFid is the dumb <Mono>prior_sampler</Mono>{" "}
-            (<Mono>84.3 *</Mono>), which has no situational skill at all. Live models top out near MoveFid 54, so ~50 is
-            middling, not strong. One generation per cell — treat small row-to-row gaps as noise; the easy-mode pattern is the robust signal.
+            (<Mono>84.3 *</Mono>), which has no situational skill at all. Live models top out near MoveFid 56 (OSim-8B),
+            so ~50 is middling, not strong. One generation per cell — treat small row-to-row gaps as noise; the easy-mode pattern is the robust signal.
           </p>
         </Section>
 
@@ -398,7 +428,9 @@ export default function Page() {
             far right) but lands on the lucky-guess line (<Mono>0.185 ≈ 0.163</Mono>): no idea what’s happening at any
             given moment. The real models score lower MoveFid yet sit above the line — they read the moment.{" "}
             <span className="text-zinc-700">High MoveFid is gameable; the pair is not.</span> (Even <Mono>always_approve</Mono>{" "}
-            clears the line at <Mono>0.241</Mono> — so the line is a floor, not a finish line.)
+            clears the line at <Mono>0.241</Mono> — so the line is a floor, not a finish line.) The{" "}
+            <span className="text-violet-600">violet</span> dots are OSim, the purpose-built simulator: top MoveFid, but
+            CondAgree below the best frontier dots — strong mix, weaker timing.
           </p>
         </Section>
 
@@ -458,6 +490,52 @@ export default function Page() {
           </p>
         </Section>
 
+        {/* OSIM — specialized simulator */}
+        <Section kicker="the purpose-built simulator" title="Does a model built for this do better? Temperament vs. aim">
+          <p className="mb-5 max-w-2xl text-sm text-zinc-600">
+            <Mono className="text-violet-700">OdysSim (OSim-4B / 8B)</Mono> is a Qwen3 model post-trained specifically
+            to imitate the <em>human</em> side of conversations — the best specialized user simulator in prior
+            customer-service work. We hosted both on Modal and ran them through the same test. The result splits in two.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
+              <div className="text-xs font-semibold text-emerald-800">Temperament — transfers ✓</div>
+              <p className="mb-3 mt-1 text-xs text-zinc-600">OSim is the <span className="font-semibold">least easy-mode</span> model — it complains most and doesn’t rubber-stamp. critical% (real = 33%):</p>
+              <RateBar label="Real devs" value={33.3} color="bg-emerald-500" max={40} baseline={33.3} />
+              <RateBar label="OSim-8B" value={16.7} color="bg-violet-500" max={40} baseline={33.3} />
+              <RateBar label="Best frontier" value={11.3} color="bg-amber-500" max={40} baseline={33.3} />
+              <p className="mt-2 text-[11px] text-zinc-500">OSim-8B also tops <span className="font-semibold">move-mix fidelity</span> (MoveFid 56.5) and, uninstructed, approves just 9.4% — it asks questions instead of approving.</p>
+            </div>
+            <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-4">
+              <div className="text-xs font-semibold text-amber-800">Situational aim — doesn’t ✗</div>
+              <p className="mb-3 mt-1 text-xs text-zinc-600">But at the <span className="font-semibold">right move at the right moment</span> (CondAgree), a frontier model given the developer’s profile still wins:</p>
+              {[
+                { l: "Gemini + profile", v: 0.333, c: "bg-blue-500" },
+                { l: "OSim-8B", v: 0.222, c: "bg-violet-500" },
+                { l: "lucky-guess line", v: 0.163, c: "bg-zinc-300" },
+              ].map((r) => (
+                <div key={r.l} className="flex items-center gap-3 py-[3px] text-xs">
+                  <div className="w-28 shrink-0 text-right text-zinc-600">{r.l}</div>
+                  <div className="relative h-5 flex-1 rounded bg-zinc-100">
+                    <div className="absolute bottom-[-3px] top-[-3px] border-l border-dashed border-amber-500/70" style={{ left: `${(0.163 / 0.4) * 100}%` }} />
+                    <div className={`h-full rounded ${r.c}`} style={{ width: `${(r.v / 0.4) * 100}%` }} />
+                  </div>
+                  <div className="w-12 shrink-0"><Mono className="text-zinc-900">{r.v.toFixed(3)}</Mono></div>
+                </div>
+              ))}
+              <p className="mt-2 text-[11px] text-zinc-500">OSim was trained on social / customer-service data, not coding — right reflexes, weaker coding-specific situational skill.</p>
+            </div>
+          </div>
+          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-zinc-700">
+            <span className="font-semibold">The split.</span> User-sim ability is two separate skills.
+            <span className="text-violet-700"> Temperament</span> — human-like pushback, not being a yes-man —
+            transfers from the purpose-built simulator. <span className="text-blue-700">Aim</span> — the right move at
+            the right coding moment — comes from a frontier model conditioned on the real developer’s profile. No model
+            has both; the best coding user-simulator would combine them (or fine-tune an OSim-style model on real
+            coding sessions like SWE-chat).
+          </p>
+        </Section>
+
         {/* CAVEATS */}
         <Section title="Caveats">
           <p className="max-w-3xl text-xs leading-relaxed text-zinc-500">
@@ -466,7 +544,9 @@ export default function Page() {
             number), percentages that exclude the small “other” move category and so may not sum to exactly 100%, and a{" "}
             <span className="font-semibold text-zinc-600">request-side</span> setup — we held the real coding agent fixed
             and asked for the developer’s next message, rather than letting the simulator drive a live agent and measuring
-            task outcomes. The easy-mode effect, though, is large and consistent across every live model.
+            task outcomes. The OSim-4B/8B models are served zero-shot on Modal in their native role-swapped format, a
+            model-appropriate interface that differs from the frontier models’ inline prompt — so cross-model gaps reflect
+            interface and model together. The easy-mode effect, though, is large and consistent across every model.
           </p>
         </Section>
 
