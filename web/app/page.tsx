@@ -4,6 +4,7 @@
 // Source: bench/results/site_v01.json (10-user × 50-turn run).
 
 import type { ReactNode } from "react";
+import sampleFull from "./sample_full.json";
 
 // ---------- ground-truth data (user-weighted macro, [mean, ci95]) ----------
 
@@ -280,29 +281,24 @@ export default function Page() {
         {/* SAMPLE PROMPT */}
         <Section kicker="what a simulator actually sees" title="One real prompt, start to finish">
           <p className="mb-4 max-w-2xl text-sm text-zinc-600">
-            This is the exact inline prompt a frontier model gets for one held-out moment from
-            <Mono> {SAMPLE.repo}</Mono> — persona at the top, the conversation so far, then the task. (The persona is
-            abbreviated here; in the real prompt it’s the full folder and each turn is clipped to 200 words.)
+            This is the exact, unedited inline prompt a frontier model gets for one held-out moment from
+            <Mono> {SAMPLE.repo}</Mono> — the full distilled persona inside <Mono>&lt;user_profile&gt;</Mono>, the
+            conversation so far, then the task. It’s <Mono>{sampleFull.chars.toLocaleString()}</Mono> characters; the
+            prefix is shown — expand for the whole thing.
           </p>
-          <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 font-mono text-[11px] leading-relaxed text-zinc-300">
-            <div className="border-b border-zinc-800 px-4 py-3">
-              <div className="text-violet-400">&lt;user_profile&gt;  <span className="text-zinc-600">— the distilled persona, placed first</span></div>
-              <pre className="mt-1 max-h-44 overflow-y-auto whitespace-pre-wrap text-zinc-400">{SAMPLE.persona}</pre>
-              <div className="text-zinc-600">[… {SAMPLE.personaWords.toLocaleString()}-word folder, abbreviated …]</div>
-              <div className="text-violet-400">&lt;/user_profile&gt;</div>
-              <div className="mt-2 text-zinc-300">You are role-playing the developer described in the profile above. The developer is using an AI coding agent in the repository <span className="text-zinc-100">`{SAMPLE.repo}`</span>. The session so far:</div>
+          <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 font-mono text-[11px] leading-relaxed">
+            <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-2 text-[10px] text-zinc-500">
+              <span>inline prompt · frontier path · one held-out point</span>
+              <span>{sampleFull.chars.toLocaleString()} chars</span>
             </div>
-            <div className="border-b border-zinc-800 px-4 py-3">
-              <div className="text-blue-400">&lt;conversation&gt;  <span className="text-zinc-600">— last ≤14 turns</span></div>
-              {SAMPLE.convo.map((t, i) => (
-                <div key={i} className="mt-2">
-                  <span className={t.role === "DEVELOPER" ? "text-blue-300" : "text-amber-300"}>[{t.role}]</span>{" "}
-                  <span className="text-zinc-400">{t.text}</span>
-                </div>
-              ))}
-              <div className="mt-2 text-blue-400">&lt;/conversation&gt;</div>
-            </div>
-            <div className="px-4 py-3 text-emerald-300">{SAMPLE.task}</div>
+            <pre className="whitespace-pre-wrap px-4 py-3 text-zinc-300">{sampleFull.prefix}<span className="text-zinc-600"> …</span></pre>
+            <details className="group border-t border-zinc-800">
+              <summary className="cursor-pointer list-none px-4 py-2 text-[11px] text-blue-400 marker:content-none hover:bg-zinc-800/60">
+                <span className="group-open:hidden">▸ Show the full prompt ({sampleFull.chars.toLocaleString()} characters)</span>
+                <span className="hidden group-open:inline">▾ Collapse full prompt</span>
+              </summary>
+              <pre className="max-h-[34rem] overflow-auto whitespace-pre-wrap border-t border-zinc-800 px-4 py-3 text-zinc-300">{sampleFull.prompt}</pre>
+            </details>
           </div>
 
           <div className="mt-5 rounded-lg border border-zinc-200 bg-white p-4">
