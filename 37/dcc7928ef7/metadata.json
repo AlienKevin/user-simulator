@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "37dcc7928ef7",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "modal_app/serve_osim.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/37/dcc7928ef7/0/metadata.json",
+      "transcript": "/37/dcc7928ef7/0/full.jsonl",
+      "context": "/37/dcc7928ef7/0/context.md",
+      "content_hash": "/37/dcc7928ef7/0/content_hash.txt",
+      "prompt": "/37/dcc7928ef7/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1301,
+    "cache_creation_tokens": 71195,
+    "cache_read_tokens": 12000806,
+    "output_tokens": 57105,
+    "api_call_count": 36
+  }
+}

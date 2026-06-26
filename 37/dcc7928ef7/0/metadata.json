@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "37dcc7928ef7",
+  "session_id": "da864ebe-6204-4f1a-bc7e-e1ee4da86833",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-26T08:10:40.114895Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "modal_app/serve_osim.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "1e54e157b874",
+  "checkpoint_transcript_start": 641,
+  "transcript_lines_at_start": 641,
+  "token_usage": {
+    "input_tokens": 1301,
+    "cache_creation_tokens": 71195,
+    "cache_read_tokens": 12000806,
+    "output_tokens": 57105,
+    "api_call_count": 36
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-06-26T08:10:39.633665Z",
+    "agent_lines": 67,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 67,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-kevin-Dev/da864ebe-6204-4f1a-bc7e-e1ee4da86833.jsonl"
+}
