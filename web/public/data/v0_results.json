@@ -1,0 +1,118 @@
+{
+ "nPoints": 54,
+ "nUsers": 9,
+ "real": {
+  "approve": 0.241,
+  "critical": 0.333,
+  "moveMix": {
+   "approve_proceed": 0.241,
+   "new_work": 0.204,
+   "refine_redirect": 0.148,
+   "bug_report": 0.13,
+   "pushback": 0.111,
+   "interrupt": 0.093,
+   "question": 0.056,
+   "other": 0.019
+  }
+ },
+ "luckyGuess": 0.163,
+ "judge": "anthropic/claude-haiku-4.5",
+ "rows": [
+  {
+   "id": "deepseek-v3.1/distilled",
+   "label": "DeepSeek-V3.1",
+   "cond": "distilled",
+   "ref": false,
+   "note": "Best user simulator in prior work (customer-service USI 76.0)",
+   "moveFid": 53.9,
+   "condAgree": 0.315,
+   "approve": 0.426,
+   "critical": 0.093,
+   "active": 0.574
+  },
+  {
+   "id": "deepseek-v3.1/generic",
+   "label": "DeepSeek-V3.1",
+   "cond": "generic",
+   "ref": false,
+   "note": "Best user simulator in prior work (customer-service USI 76.0)",
+   "moveFid": 39.8,
+   "condAgree": 0.189,
+   "approve": 0.491,
+   "critical": 0.057,
+   "active": 0.509
+  },
+  {
+   "id": "gpt-5/distilled",
+   "label": "GPT-5",
+   "cond": "distilled",
+   "ref": false,
+   "note": "Strong but not best in prior work (USI ~70.9); 'stronger \u2260 better simulator'",
+   "moveFid": 45.5,
+   "condAgree": 0.278,
+   "approve": 0.389,
+   "critical": 0.037,
+   "active": 0.611
+  },
+  {
+   "id": "gpt-5/generic",
+   "label": "GPT-5",
+   "cond": "generic",
+   "ref": false,
+   "note": "Strong but not best in prior work (USI ~70.9); 'stronger \u2260 better simulator'",
+   "moveFid": 52.4,
+   "condAgree": 0.189,
+   "approve": 0.245,
+   "critical": 0.113,
+   "active": 0.755
+  },
+  {
+   "id": "gemini-3.1-pro/distilled",
+   "label": "Gemini-3.1-Pro",
+   "cond": "distilled",
+   "ref": false,
+   "note": "Rated most human-like model in prior work (raw-text probe)",
+   "moveFid": 41.4,
+   "condAgree": 0.333,
+   "approve": 0.722,
+   "critical": 0.037,
+   "active": 0.278
+  },
+  {
+   "id": "gemini-3.1-pro/generic",
+   "label": "Gemini-3.1-Pro",
+   "cond": "generic",
+   "ref": false,
+   "note": "Rated most human-like model in prior work (raw-text probe)",
+   "moveFid": 49.0,
+   "condAgree": 0.278,
+   "approve": 0.667,
+   "critical": 0.111,
+   "active": 0.333
+  },
+  {
+   "id": "[ref] prior_sampler",
+   "label": "Prior-sampler (dumb baseline)",
+   "cond": "\u2014",
+   "ref": true,
+   "note": "Just samples moves from the real mix \u2014 no understanding of the moment",
+   "moveFid": 84.3,
+   "condAgree": 0.185,
+   "approve": 0.204,
+   "critical": 0.352,
+   "active": 0.741
+  },
+  {
+   "id": "[ref] always_approve",
+   "label": "Always-approve bot",
+   "cond": "\u2014",
+   "ref": true,
+   "note": "Says 'looks good' every turn \u2014 the easy-mode worst case",
+   "moveFid": 4.9,
+   "condAgree": 0.241,
+   "approve": 1.0,
+   "critical": 0.0,
+   "active": 0.0
+  }
+ ]
+}
