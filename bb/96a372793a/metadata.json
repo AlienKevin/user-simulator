@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "bb96a372793a",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "web/app/page.tsx",
+    "web/public/data/v0_macro_7user.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/bb/96a372793a/0/metadata.json",
+      "transcript": "/bb/96a372793a/0/full.jsonl",
+      "context": "/bb/96a372793a/0/context.md",
+      "content_hash": "/bb/96a372793a/0/content_hash.txt",
+      "prompt": "/bb/96a372793a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10733,
+    "cache_creation_tokens": 1163104,
+    "cache_read_tokens": 42040197,
+    "output_tokens": 323943,
+    "api_call_count": 158
+  }
+}
