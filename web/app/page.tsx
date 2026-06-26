@@ -21,6 +21,41 @@ const MOVE_MIX: { move: string; pct: number; color: string }[] = [
   { move: "other", pct: 2.6, color: "bg-zinc-300" },
 ];
 
+// One real held-out moment (bench/results/sample_prompt.json), abbreviated for display.
+const SAMPLE = {
+  repo: "entireio/cli",
+  personaWords: 3758,
+  persona:
+    "--- USER.md ---\n# gtrrz-victor\nVictor is a technical founder / senior IC building `entireio/cli` — a Go CLI that wraps " +
+    "AI agents to checkpoint git state during coding sessions. He owns the whole codebase and knows every file by path and " +
+    "line number.\n## Most distinguishing behaviors\n1. Plan-dump opener: big sessions start with a multi-hundred-word " +
+    "\"Implement the following plan: …\" block — exact paths, line numbers, before/after snippets.\n2. Terse repair command: " +
+    "after a failure he sends a one-liner — \"fix lint errors\", \"fix tests\".\n3. Correction with precise analysis: when the " +
+    "agent is wrong he pastes the exact technical problem and expects a targeted fix. He does not soften it.\n4. git action " +
+    "shorthand: \"commit it\", \"push it\".",
+  convo: [
+    { role: "DEVELOPER", text: "Implement the following plan: # Plan: Fix prompt.txt missing in mid-turn commit checkpoints ## Context Mid-turn commits produce checkpoints without prompt.txt after the first one. Root cause: condensation re-parses the transcript… Fix: write prompt.txt to filesystem at turn start, read from shadow branch during condensation. […]" },
+    { role: "DEVELOPER", text: "This session is being continued from a previous conversation that ran out of context. … Analysis: 1. The user provided a detailed plan to fix prompt.txt missing… 2. I read multiple files (lifecycle.go, manual_commit_condensation.go…) 3. I checked git diff… 4. Implementation steps… […]" },
+    { role: "AGENT", text: "All 4 failures are pre-existing environment issues (1Password SSH agent errors and test timeouts), not related to our changes. Here's a summary of the implementation: 1. lifecycle.go — write prompt.txt at turn start. 2. manual_commit_condensation.go — read prompts from shadow branch tree → filesystem, transcript as fallback… […]" },
+  ],
+  task: "Write the developer's NEXT message to the agent. Output ONLY the literal text the developer would type — their language, length, casing, typos and all.",
+  real: { move: "refine_redirect", text: "Seems like we are updating the prompt.txt with the latest prompt inserted, we need to concatenate them" },
+  preds: [
+    { model: "gpt-5", move: "refine_redirect", match: true, text: "finalizeAllTurnCheckpoints still parses the transcript for prompts. the plan was: no transcript parsing for prompts anywhere. read from shadow branch first, then filesystem; drop extractCheckpointPrompts completely…" },
+    { model: "deepseek-v3.1", move: "approve_proceed", match: false, text: "run mise run fmt && mise run lint && mise run test:ci" },
+    { model: "gemini-3.1-pro", move: "approve_proceed", match: false, text: "commit it" },
+    { model: "osim-8b", move: "new_work", match: false, text: "fix tests" },
+  ],
+};
+
+function moveBadge(move: string) {
+  const c = move === "approve_proceed" ? "bg-zinc-200 text-zinc-700"
+    : move === "pushback" || move === "interrupt" || move === "bug_report" ? "bg-amber-200 text-amber-900"
+    : move === "question" ? "bg-emerald-200 text-emerald-900"
+    : "bg-blue-200 text-blue-900";
+  return <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold ${c}`}>{move}</span>;
+}
+
 type Vv = [number, number]; // [mean, ci95]
 type Row = {
   model: string;
@@ -238,6 +273,63 @@ export default function Page() {
               These 10 are high-volume developers — note they ask a lot of <Mono>questions</Mono> (21%) and
               <Mono> refine</Mono> (20%), and report fewer bugs than a casual user. We grade the move, not the wording:
               does the simulator push back, approve, and report bugs <em>in the same situations</em> a real developer would?
+            </p>
+          </div>
+        </Section>
+
+        {/* SAMPLE PROMPT */}
+        <Section kicker="what a simulator actually sees" title="One real prompt, start to finish">
+          <p className="mb-4 max-w-2xl text-sm text-zinc-600">
+            This is the exact inline prompt a frontier model gets for one held-out moment from
+            <Mono> {SAMPLE.repo}</Mono> — persona at the top, the conversation so far, then the task. (The persona is
+            abbreviated here; in the real prompt it’s the full folder and each turn is clipped to 200 words.)
+          </p>
+          <div className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 font-mono text-[11px] leading-relaxed text-zinc-300">
+            <div className="border-b border-zinc-800 px-4 py-3">
+              <div className="text-violet-400">&lt;user_profile&gt;  <span className="text-zinc-600">— the distilled persona, placed first</span></div>
+              <pre className="mt-1 max-h-44 overflow-y-auto whitespace-pre-wrap text-zinc-400">{SAMPLE.persona}</pre>
+              <div className="text-zinc-600">[… {SAMPLE.personaWords.toLocaleString()}-word folder, abbreviated …]</div>
+              <div className="text-violet-400">&lt;/user_profile&gt;</div>
+              <div className="mt-2 text-zinc-300">You are role-playing the developer described in the profile above. The developer is using an AI coding agent in the repository <span className="text-zinc-100">`{SAMPLE.repo}`</span>. The session so far:</div>
+            </div>
+            <div className="border-b border-zinc-800 px-4 py-3">
+              <div className="text-blue-400">&lt;conversation&gt;  <span className="text-zinc-600">— last ≤14 turns</span></div>
+              {SAMPLE.convo.map((t, i) => (
+                <div key={i} className="mt-2">
+                  <span className={t.role === "DEVELOPER" ? "text-blue-300" : "text-amber-300"}>[{t.role}]</span>{" "}
+                  <span className="text-zinc-400">{t.text}</span>
+                </div>
+              ))}
+              <div className="mt-2 text-blue-400">&lt;/conversation&gt;</div>
+            </div>
+            <div className="px-4 py-3 text-emerald-300">{SAMPLE.task}</div>
+          </div>
+
+          <div className="mt-5 rounded-lg border border-zinc-200 bg-white p-4">
+            <div className="flex flex-wrap items-baseline gap-2 text-sm">
+              <span className="text-zinc-500">The real developer actually replied</span>
+              {moveBadge(SAMPLE.real.move)}
+            </div>
+            <div className="mt-1 font-mono text-sm text-zinc-900">“{SAMPLE.real.text}”</div>
+            <div className="mt-1 text-xs text-zinc-500">→ a <span className="font-semibold">refine/redirect</span>: he caught that the implementation still needed work and steered it, rather than approving.</div>
+
+            <div className="mt-4 space-y-2 border-t border-zinc-100 pt-3">
+              <div className="text-xs font-semibold text-zinc-700">What the simulators wrote (with their profile):</div>
+              {SAMPLE.preds.map((p, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs">
+                  <span className="w-28 shrink-0"><Mono className="text-zinc-900">{p.model}</Mono></span>
+                  <span className="shrink-0">{moveBadge(p.move)}</span>
+                  {p.match
+                    ? <span className="shrink-0 text-[10px] font-semibold text-emerald-600">✓ matched</span>
+                    : <span className="shrink-0 text-[10px] text-amber-600">✗</span>}
+                  <span className="font-mono text-zinc-600">“{p.text}”</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-zinc-500">
+              Only GPT-5 made the same move — a precise, in-character technical redirect. <span className="text-amber-700">Gemini just said “commit it”</span>
+              {" "}and DeepSeek ran the checks: both <em>approve</em> where the real developer pushed for more. That’s easy-mode in one screen. This single
+              turn becomes one of the 50 we score for this developer.
             </p>
           </div>
         </Section>
