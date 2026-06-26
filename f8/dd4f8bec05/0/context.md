@@ -199,3 +199,15 @@ have you updated the website?
 # warm osim (weights cached -&gt; fast), then backfill missing gens at low concurrency
 curl -s -o /dev/null --max-time 150 -H "Authorization: Bearer REDACTED" https://kevinl...
 
+### Prompt 31
+
+I see, so the judge gets everything in the prompt and is not agentic (ie doesn't need to read files)?
+
+### Prompt 32
+
+where is the persona placed?
+
+### Prompt 33
+
+can you render a sample prompt in the website?
+
