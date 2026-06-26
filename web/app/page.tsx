@@ -99,8 +99,8 @@ function Section({ kicker, title, children }: { kicker?: string; title: string; 
   );
 }
 
-function RateBar({ label, sub, value, ciVal, color, baseline, max = 100, flag }: {
-  label: string; sub?: string; value: number; ciVal?: number; color: string; baseline?: number; max?: number; flag?: string;
+function RateBar({ label, sub, value, ciVal, color, baseline, max = 100, flag, unit = "%" }: {
+  label: string; sub?: string; value: number; ciVal?: number; color: string; baseline?: number; max?: number; flag?: string; unit?: string;
 }) {
   const left = Math.min(100, (value / max) * 100);
   return (
@@ -117,7 +117,7 @@ function RateBar({ label, sub, value, ciVal, color, baseline, max = 100, flag }:
         )}
       </div>
       <div className="w-28 shrink-0">
-        <Mono className="text-zinc-900">{value}%</Mono>
+        <Mono className="text-zinc-900">{value}{unit}</Mono>
         {ciVal !== undefined && ciVal > 0 && <Mono className="text-zinc-400"> ±{ciVal}</Mono>}
         {flag && <span className="ml-1 text-[10px] text-emerald-600">{flag}</span>}
       </div>
@@ -354,6 +354,35 @@ export default function Page() {
               example={<>10 developers × 50 turns each; <Mono>±</Mono> is the 95% CI across developers.</>}
               gotcha={<>Wide-ish CIs remain (10 developers) — treat gaps under ~the <Mono>±</Mono> as ties.</>} />
           </div>
+        </Section>
+
+        {/* VISUAL: MoveFid + CondAgree bars */}
+        <Section kicker="the two scores, by model" title="Move-mix fidelity, and reading the moment">
+          <p className="mb-5 max-w-2xl text-sm text-zinc-600">
+            <span className="font-semibold">MoveFid</span> (left) — does the simulator produce the right <em>blend</em> of
+            moves? <span className="font-semibold">CondAgree</span> (right) — does it pick the right move at the right
+            <em> moment</em>? Whiskers = 95% CI across developers. <span className="text-violet-600">Violet = purpose-built OSim.</span>
+          </p>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="rounded-lg border border-zinc-200 bg-white p-4">
+              <div className="mb-2 text-xs font-semibold text-zinc-700">MoveFid <span className="font-normal text-zinc-400">— higher = mix closer to real (0–100)</span></div>
+              {frontier.map((r, i) => <RateBar key={i} label={r.model.split("-")[0]} sub={r.mode === "with-profile" ? "profile" : "no profile"} value={mv(r.moveFid)} ciVal={cv(r.moveFid)} color="bg-blue-500" max={100} unit="" />)}
+              {spec.map((r, i) => <RateBar key={i} label={r.model} sub={r.mode === "with-profile" ? "profile" : "no profile"} value={mv(r.moveFid)} ciVal={cv(r.moveFid)} color="bg-violet-500" max={100} unit="" />)}
+              {refs.map((r, i) => <RateBar key={i} label={r.model} sub="ref" value={mv(r.moveFid)} color="bg-zinc-400" max={100} unit="" flag={r.model === "prior_sampler" ? "gameable" : undefined} />)}
+            </div>
+            <div className="rounded-lg border border-zinc-200 bg-white p-4">
+              <div className="mb-2 text-xs font-semibold text-zinc-700">CondAgree <span className="font-normal text-amber-600">— dashed = lucky-guess 0.27</span></div>
+              {frontier.map((r, i) => <RateBar key={i} label={r.model.split("-")[0]} sub={r.mode === "with-profile" ? "profile" : "no profile"} value={mv(r.condAgree)} ciVal={cv(r.condAgree)} color="bg-blue-500" baseline={LUCKY} max={0.4} unit="" />)}
+              {spec.map((r, i) => <RateBar key={i} label={r.model} sub={r.mode === "with-profile" ? "profile" : "no profile"} value={mv(r.condAgree)} ciVal={cv(r.condAgree)} color="bg-violet-500" baseline={LUCKY} max={0.4} unit="" />)}
+              {refs.map((r, i) => <RateBar key={i} label={r.model} sub="ref" value={mv(r.condAgree)} color="bg-zinc-400" baseline={LUCKY} max={0.4} unit="" />)}
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-zinc-500">
+            On <span className="font-semibold">MoveFid</span> the dumb <Mono>prior_sampler</Mono> tops the chart
+            (<Mono>81</Mono>) — the move-<em>mix</em> is easy to fake, so OSim leading the real models here means less than
+            it looks. On <span className="font-semibold">CondAgree</span> every simulator clusters at the dashed
+            lucky-guess line (<Mono>~0.27</Mono>): they imitate a developer’s habits but don’t read the moment.
+          </p>
         </Section>
 
         {/* VISUAL A — approve / critical */}
