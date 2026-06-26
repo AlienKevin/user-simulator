@@ -325,6 +325,28 @@ export default function Page() {
 
         {/* VISUAL A — approve / critical comparison */}
         <Section kicker="the headline, in two pictures" title="Every model is too polite">
+          <div className="mb-5 grid gap-3 rounded-lg border border-zinc-200 bg-zinc-50/60 p-4 text-xs md:grid-cols-2">
+            <div>
+              <div className="font-mono font-semibold text-zinc-900">approve%</div>
+              <div className="mt-1 text-zinc-600">
+                Share of the simulator’s turns labelled the <Mono className="text-zinc-700">approve_proceed</Mono> move —
+                “looks good”, “continue”, “commit / push”, “move on”.
+              </div>
+            </div>
+            <div>
+              <div className="font-mono font-semibold text-zinc-900">critical% <span className="font-normal text-zinc-400">= pushback + interrupt + bug_report</span></div>
+              <div className="mt-1 text-zinc-600">
+                Share of turns labelled <Mono className="text-zinc-700">pushback</Mono> (correcting/rejecting the agent),
+                <Mono className="text-zinc-700"> interrupt</Mono> (cutting it off mid-work), or
+                <Mono className="text-zinc-700"> bug_report</Mono> (reporting something broken).
+              </div>
+            </div>
+            <div className="text-[11px] text-zinc-400 md:col-span-2">
+              The remaining moves — <Mono>new_work</Mono>, <Mono>refine/redirect</Mono>, <Mono>question</Mono> — count as
+              neither. Each is a fraction of one simulator’s ~labelled turns per developer, then averaged across developers
+              (user-weighted). Move labels come from the <Mono>claude-haiku-4.5</Mono> classifier.
+            </div>
+          </div>
           <p className="mb-5 max-w-2xl text-sm text-zinc-600">
             Read against the dashed real-developer lines (whiskers = 95% CI across developers). On
             <span className="font-semibold"> approve%</span>, general-purpose models sit at or past <Mono>27%</Mono>
