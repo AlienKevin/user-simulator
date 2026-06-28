@@ -461,3 +461,117 @@ python3 - &lt;&lt;'PY'
 p='bench/profileopt/rerun_condagree.py'; s=open(p).read()
 s=s.replace('ThreadPoolExecutor(max_workers=16)','ThreadPool...
 
+### Prompt 73
+
+additionally test https://openrouter.ai/deepseek/deepseek-v4-flash using openrouter at concurrency 64 to speed things up
+
+### Prompt 74
+
+[Request interrupted by user]
+
+### Prompt 75
+
+add https://openrouter.ai/deepseek/deepseek-v4-pro as well, also at concurrency 64
+
+### Prompt 76
+
+additionally test gpt-5.5 (xhigh), claude-opus-4.8 (xhigh), GLM-5.2 (max), gemini 3.1 pro (high) also at 64 concurrency
+
+### Prompt 77
+
+[Request interrupted by user for tool use]
+
+### Prompt 78
+
+make sure to record all experiment artifacts for later analysis/reproduction
+
+### Prompt 79
+
+[Request interrupted by user]
+
+### Prompt 80
+
+additionally test OSim-8B at 32 concurrency
+
+### Prompt 81
+
+those models can all run in parallel?
+
+### Prompt 82
+
+<task-notification>
+<task-id>awhat-is-the-30dd81533c4c8431</task-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Agent "what is the lucky-guess line" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more...
+
+### Prompt 83
+
+<task-notification>
+<task-id>awhats-the-total-c1a4514c4f1b9c76</task-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Agent "what's the total cost for all models?" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-i...
+
+### Prompt 84
+
+[Request interrupted by user]
+
+### Prompt 85
+
+<task-notification>
+<task-id>b0mu85xeo</task-id>
+<tool-use-id>toolu_01CwCxx5q12kzhgm1ExSRCHf</tool-use-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Background command "cd /Users/kevin/Dev/user.skill
+pkill -f exp_condagree.py 2&gt;/dev/null; sleep 1; echo "stopped (cache preserved)"
+python3 - &lt;&lt;'PY'
+p='bench/profileopt/exp_condagree.py'; s=open(p).read()
+old='''    # --...
+
+### Prompt 86
+
+[Request interrupted by user]
+
+### Prompt 87
+
+don't pause since we are already so close, actually finish everything up!
+
+### Prompt 88
+
+[Request interrupted by user]
+
+### Prompt 89
+
+I just added more credits
+
+### Prompt 90
+
+<task-notification>
+<task-id>bv1nmtsie</task-id>
+<tool-use-id>REDACTED</tool-use-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Background command "cd /Users/kevin/Dev/user.skill
+# 1. fix label() to never cache None (prevents re-poisoning)
+python3 - &lt;&lt;'PY'
+p='bench/profileopt/exp_condagree.py'; s=open(p).read()
+s=s.replace('    mv = TAX.classify(tex...
+
+### Prompt 91
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary Request and Intent:
+
+The conversation built "UserSimBench" — a benchmark evaluating user simulators in the coding-agent setting, grounded in real SWE-chat data. The CURRENT (most recent) goal, set via /goal, is:
+   - "this latest 4-way taxonomy looks great, please document this in our code base and set it as the taxonomy fo...
+
+### Prompt 92
+
+please hide deepseek-v4-flash and deepseek-v3.1 by default in the main chart to save space but allow view by selecting which models to see
+
