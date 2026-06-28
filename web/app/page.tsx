@@ -1,20 +1,21 @@
 // UserSimBench — centered on a single metric: CondAgree.
 // Data: bench/profileopt/experiments/condagree_multi/summary.json (v2 4-way taxonomy, single Haiku
 // judge, 20-user user+repo-disjoint SWE-chat test split, 480 held-out points, 9 models x ±profile).
+"use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 const LUCKY = 0.419; // lucky-guess line = expected CondAgree from the move-mix alone (per-developer Σp²)
 
-type M = { id: string; label: string; note: string; kind: "general" | "specialized"; np: { ca: number; ci: number }; wp: { ca: number; ci: number } };
-// sorted by with-profile CondAgree (descending)
+type M = { id: string; label: string; note: string; kind: "general" | "specialized"; hidden?: boolean; np: { ca: number; ci: number }; wp: { ca: number; ci: number } };
+// sorted by with-profile CondAgree (descending). hidden=true -> off by default to save space.
 const MODELS: M[] = [
   { id: "glm-5.2", label: "GLM-5.2", note: "reasoning · max", kind: "general", np: { ca: 0.583, ci: 0.130 }, wp: { ca: 0.667, ci: 0.104 } },
   { id: "gpt-5.5", label: "GPT-5.5", note: "reasoning · xhigh", kind: "general", np: { ca: 0.548, ci: 0.146 }, wp: { ca: 0.547, ci: 0.147 } },
   { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", note: "reasoning", kind: "general", np: { ca: 0.486, ci: 0.065 }, wp: { ca: 0.509, ci: 0.081 } },
-  { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", note: "reasoning", kind: "general", np: { ca: 0.496, ci: 0.075 }, wp: { ca: 0.507, ci: 0.098 } },
+  { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", note: "reasoning", kind: "general", hidden: true, np: { ca: 0.496, ci: 0.075 }, wp: { ca: 0.507, ci: 0.098 } },
   { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", note: "reasoning · high", kind: "general", np: { ca: 0.511, ci: 0.127 }, wp: { ca: 0.492, ci: 0.112 } },
-  { id: "deepseek-v3.1", label: "DeepSeek-V3.1", note: "frontier", kind: "general", np: { ca: 0.512, ci: 0.075 }, wp: { ca: 0.488, ci: 0.093 } },
+  { id: "deepseek-v3.1", label: "DeepSeek-V3.1", note: "frontier", kind: "general", hidden: true, np: { ca: 0.512, ci: 0.075 }, wp: { ca: 0.488, ci: 0.093 } },
   { id: "osim-8b", label: "OSim-8B", note: "purpose-built simulator", kind: "specialized", np: { ca: 0.427, ci: 0.064 }, wp: { ca: 0.476, ci: 0.072 } },
   { id: "claude-opus-4.8", label: "Claude-Opus-4.8", note: "reasoning · xhigh", kind: "general", np: { ca: 0.457, ci: 0.107 }, wp: { ca: 0.465, ci: 0.143 } },
   { id: "osim-4b", label: "OSim-4B", note: "purpose-built simulator", kind: "specialized", np: { ca: 0.388, ci: 0.064 }, wp: { ca: 0.461, ci: 0.073 } },
@@ -64,6 +65,12 @@ export default function Page() {
   const d31 = MODELS.find((m) => m.id === "deepseek-v3.1")!;
   const delta = (m: M) => +(m.wp.ca - m.np.ca).toFixed(3);
 
+  const [shown, setShown] = useState<Set<string>>(() => new Set(MODELS.filter((m) => !m.hidden).map((m) => m.id)));
+  const toggle = (id: string) => setShown((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const allOn = shown.size === MODELS.length;
+  const setAll = (on: boolean) => setShown(on ? new Set(MODELS.map((m) => m.id)) : new Set(MODELS.filter((m) => !m.hidden).map((m) => m.id)));
+  const visible = MODELS.filter((m) => shown.has(m.id));
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
@@ -100,8 +107,27 @@ export default function Page() {
             <div className="text-xs font-semibold text-zinc-700">CondAgree — right move, right moment (higher is better)</div>
             <div className="text-[10px] text-zinc-400">sorted by with-profile</div>
           </div>
-          <div className="mb-4 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–0.75</div>
-          {MODELS.map((m) => {
+          <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–0.75</div>
+
+          {/* MODEL SELECTOR */}
+          <div className="mb-4 flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 text-[10px] uppercase tracking-wider text-zinc-400">show</span>
+            {MODELS.map((m) => {
+              const on = shown.has(m.id);
+              return (
+                <button key={m.id} onClick={() => toggle(m.id)} aria-pressed={on}
+                  className={`rounded-full border px-2 py-0.5 font-mono text-[10px] transition ${on ? (m.kind === "specialized" ? "border-violet-600 bg-violet-600 text-white" : "border-indigo-600 bg-indigo-600 text-white") : "border-zinc-200 bg-white text-zinc-400 hover:border-zinc-400"}`}>
+                  {m.label}
+                </button>
+              );
+            })}
+            <button onClick={() => setAll(!allOn)} className="ml-1 text-[10px] text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline">
+              {allOn ? "reset" : "show all 9"}
+            </button>
+          </div>
+
+          {visible.length === 0 && <div className="py-4 text-center text-xs text-zinc-400">No models selected — pick some above.</div>}
+          {visible.map((m) => {
             const d = delta(m);
             const bar = m.kind === "specialized" ? "bg-violet-500" : "bg-indigo-500";
             const barLight = m.kind === "specialized" ? "bg-violet-300" : "bg-indigo-300";
