@@ -2,9 +2,9 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Are AI models good enough to stand in for real developers? — UserSimBench v0",
+  title: "Does a user profile help a coding-agent simulator? — CondAgree",
   description:
-    "We tested whether today's top AI models can role-play a real software developer to stress-test coding agents. They can't: every model is too polite. Real developers say \"something's wrong\" on 1 turn in 3; the toughest AI model manages 1 in 9.",
+    "A single metric — CondAgree (did the simulator make the same move the real developer made?) — for DeepSeek-V3.1 and OSim-4B, with and without a distilled user profile, on a user- and repo-disjoint SWE-chat test split.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
