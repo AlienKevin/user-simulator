@@ -571,3 +571,7 @@ Summary:
 The conversation built "UserSimBench" — a benchmark evaluating user simulators in the coding-agent setting, grounded in real SWE-chat data. The CURRENT (most recent) goal, set via /goal, is:
    - "this latest 4-way taxonomy looks great, please document this in our code base and set it as the taxonomy fo...
 
+### Prompt 92
+
+please hide deepseek-v4-flash and deepseek-v3.1 by default in the main chart to save space but allow view by selecting which models to see
+
