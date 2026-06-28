@@ -1,0 +1,52 @@
+{
+ "index": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/index.json",
+ "files": [
+  {
+   "name": "summary.json",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/summary.json",
+   "bytes": 6756,
+   "description": "Headline results: per (model, condition) CondAgree macro mean + 95% CI + per-user array; lucky_guess line; real move distribution."
+  },
+  {
+   "name": "manifest.json",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/manifest.json",
+   "bytes": 1983,
+   "description": "Experiment config: the 9 models with OpenRouter ids + reasoning efforts + concurrency, split file, taxonomy, judge model, n_per_user, n_points, git sha, timestamp."
+  },
+  {
+   "name": "taxonomy.json",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/taxonomy.json",
+   "bytes": 2762,
+   "description": "The v2 4-way move taxonomy: categories (approve/critical/directive/inquiry), the exact classifier prompt body, OLD->NEW remap from the legacy 7-way, and inter-judge kappa."
+  },
+  {
+   "name": "splits.json",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/splits.json",
+   "bytes": 8341,
+   "description": "Train/val/test split with NON-OVERLAPPING users AND repos (connected components of the user<->repo graph); qualifying eval-users per split."
+  },
+  {
+   "name": "points.jsonl",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/points.jsonl",
+   "bytes": 695881,
+   "description": "The 480 frozen held-out prediction points (one JSON per line): {point_id, slug, repo, turn_index, prev_agent, real_text}."
+  },
+  {
+   "name": "raw.jsonl",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/raw.jsonl",
+   "bytes": 4720074,
+   "description": "Every trial (one JSON per line). Generation: {key, kind:'gen', point_id, slug, model, model_id, backend, effort, cond('distilled'|'generic'), text, ts, seed?}. Move label: {key:'lab:haiku:<hash>', move}. Join gens to labels via the 4-way classifier on (prev_agent, text)."
+  }
+ ],
+ "models": [
+  "deepseek-v3.1",
+  "deepseek-v4-flash",
+  "deepseek-v4-pro",
+  "gpt-5.5",
+  "claude-opus-4.8",
+  "glm-5.2",
+  "gemini-3.1-pro",
+  "osim-4b",
+  "osim-8b"
+ ]
+}
