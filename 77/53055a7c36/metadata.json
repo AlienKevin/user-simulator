@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "7753055a7c36",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "web/.gitignore",
+    "web/out/404.html",
+    "web/out/__next.__PAGE__.txt",
+    "web/out/__next._full.txt",
+    "web/out/__next._head.txt",
+    "web/out/__next._index.txt",
+    "web/out/__next._tree.txt",
+    "web/out/_next/static/chunks/03~yq9q893hmn.js",
+    "web/out/_next/static/chunks/07lhk_q6pmm3r.js",
+    "web/out/_next/static/chunks/0dbhjjzl8qfwv.js",
+    "web/out/_next/static/chunks/0r8nt2o8muejo.js",
+    "web/out/_not-found.html",
+    "web/out/_not-found.txt",
+    "web/out/_not-found/__next._full.txt",
+    "web/out/_not-found/__next._head.txt",
+    "web/out/_not-found/__next._index.txt",
+    "web/out/_not-found/__next._not-found.__PAGE__.txt",
+    "web/out/_not-found/__next._not-found.txt",
+    "web/out/_not-found/__next._tree.txt",
+    "web/out/index.html",
+    "web/out/index.txt"
+  ],
+  "sessions": [
+    {
+      "metadata": "/77/53055a7c36/0/metadata.json",
+      "transcript": "/77/53055a7c36/0/full.jsonl",
+      "context": "/77/53055a7c36/0/context.md",
+      "content_hash": "/77/53055a7c36/0/content_hash.txt",
+      "prompt": "/77/53055a7c36/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 111932,
+    "cache_creation_tokens": 5377842,
+    "cache_read_tokens": 353082243,
+    "output_tokens": 1191277,
+    "api_call_count": 658
+  }
+}
