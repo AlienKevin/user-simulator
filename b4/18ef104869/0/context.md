@@ -742,3 +742,21 @@ continue
 <summary>Agent "why is DeepSeek-V4-Pro only [low]?" finished</summary>
 <note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the ...
 
+### Prompt 120
+
+<task-notification>
+<task-id>awhy-is-deepseek-v4-pro-168def2be611b897</task-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Agent "why is DeepSeek-V4-Pro only [low]?" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the ...
+
+### Prompt 121
+
+<task-notification>
+<task-id>awhy-is-deepseek-v4-pro-168def2be611b897</task-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Agent "why is DeepSeek-V4-Pro only [low]?" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the ...
+

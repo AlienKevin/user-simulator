@@ -133,7 +133,7 @@ first verify you have access to Modal
 <status>completed</status>
 <summary>Background command "cat &gt; /tmp/warm_osim.sh &lt;&lt;'EOF'
 #!/bin/bash
-KEY="REDACTED"
+KEY="osim-eval-key"
 declare -A URL=( [8b]="https://kevinli020508--osim-eval-serve-8b.modal.run/v1/models" [4b]="https://kevinli020508--osim-eval-serve-4b.modal.run/v1/models" )
 deadline=$(( $(date +%s) + 1080 ))   # 18 min budget
 declare -A ready=( [8b]=0 [4b]=0 )
@@ -1161,4 +1161,65 @@ Takeaway: **max effort roughly doubles hidden reasoning (~210→~410 tokens) but
 
 **One caveat worth knowing:** the experiment's gen-cache key omits effort (`gen|{point}|{model}|{cond}`), so a *future* `python exp_condagree.py` run would silently reuse the old low-effort gens for deepseek-v4-pro rather than regenerate at max — which is exactly why I ran it through a dedicated script with an `@max` key. If you want max to be the durable default end-to-end, that cache key needs `effort` added (small fix; say the word and I'll do it).</result>
 <usage><subagent_tokens>114230</subagent_tokens><tool_uses>28</tool_uses><duration_ms>1744945</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>awhy-is-deepseek-v4-pro-168def2be611b897</task-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Agent "why is DeepSeek-V4-Pro only [low]?" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Both tasks are complete. Here's the rundown.
+
+## 1. Effort added to the cache key ✅
+
+The gen-cache key was `gen|{point}|{model}|{cond}` — effort-blind, which is exactly why a max-effort rerun silently reused low gens. It's now `gen|{point}|{model}|{cond}|{effort}` in both `exp_condagree.py` (3 sites) and `rerun_condagree.py` (3 sites, which share the same cache file).
+
+The risky part was the existing cache — naively adding effort to the key would have invalidated all **8,640 gens** and triggered a full (paid) regeneration. So I migrated instead:
+
+- Rewrote all 20,008 lines of `rerun_raw.jsonl`, backfilling effort into every gen key from each record's own `effort` field (falling back to the historical per-model effort), and merged the v4-pro max gens under the new key. **Backup at `rerun_raw.jsonl.bak`**; the 9,171 labels were left untouched.
+- **Verified**: a future `exp_condagree.py` run is now a full cache hit (0 regen) for every model *except* the 3 unrecoverable v4-pro max gens (the ones that fail because max-effort reasoning eats the whole token budget). Flipping any model's effort now correctly regenerates; flipping back resumes free.
+- Bonus finding: under the old effort-blind key, v4-pro's low and max gens had been **silently colliding** (last-write-wins) — a sibling fork had written 957 max gens on top of the 960 low ones. The migration cleanly separated them (low=960, max=957), both preserved.
+
+## 2. Why you still see `DeepSeek-V4-Pro [low]`
+
+Because **the results chart isn't driven by the bench JSONs I updated** — it's a separate Next.js app at `/Users/kevin/Dev/user-simulator/web/`, and the effort tag is **hardcoded** in `app/page.tsx` (`note: "[low]"`). Editing the `user.skill` artifacts never touches it.
+
+A sibling fork already fixed the *source*: commit `3aa52f8` set deepseek-v4-pro to `note: "[max]"` with the max numbers (0.487 / 0.526), and `page.tsx` at HEAD is `[max]`. The local builds (`.next/` and `out/`) are rebuilt to `[max]` with **zero `[low]`**.
+
+The catch: that commit changed *only* `page.tsx`, not the committed `out/`. The committed/**deployed** static export is stale, and the rebuilt `[max]` `out/` is **uncommitted and undeployed** (no dev server running either). So what you're looking at is a stale deployed/cached copy — the source is already correct; this is a build-and-deploy step, not a code fix.
+
+**Remedy:** commit the rebuilt `out/` and redeploy (or hard-refresh / clear the CDN cache). I left `user-simulator/` untouched since a sibling fork owns it — say the word and I'll commit the rebuilt `out/` and/or kick off the redeploy.
+
+I also saved a memory noting the website is a separate hardcoded Next.js app, so this doesn't trip us up again. One thing I couldn't pin down: your exact viewing surface (I found no deploy URL or running server), so "stale deployed/cached copy" is the best-supported explanation given the source and every local build are now `[max]`.</result>
+<usage><subagent_tokens>193701</subagent_tokens><tool_uses>57</tool_uses><duration_ms>2859355</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>awhy-is-deepseek-v4-pro-168def2be611b897</task-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Agent "why is DeepSeek-V4-Pro only [low]?" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>All four changes are built and verified in the static output, TypeScript passed, and the site still shows zero `[low]` / v4-pro `[max]`. Here's what I did this turn (all in `user-simulator/web/app/page.tsx`):
+
+**1. Reasoning-effort discussion → results section.** Added a paragraph right after the baseline numbers, framed as "one lever that turns out *not* to matter": the controlled DeepSeek-V4-Pro low-vs-max rerun (prompt/seeds/judge held fixed), showing that ~2× the reasoning budget (≈230→410 tokens) moved CondAgree by only +0.017 (with profile, 0.509→0.526) and +0.001 (without, 0.486→0.487), both inside the ±0.08 CI — so the task rewards reading the situation, not deliberation.
+
+**2. Rewrote the intro + added a prominent "key takeaways" box.** The intro is tightened/refreshed (grades CondAgree, freezes 9 sims, scores 480 moments ×2 on a leak-free split), and directly below it a bordered **key takeaways** card surfaces all five headline findings without reading the page:
+- Top is a *cluster*, not a winner (leaders ~0.52–0.55, all clear the 0.419 chance line; OSim trails)
+- The developer profile is the real lever — but only for the small sims &amp; GLM-5.2 (+0.099)
+- The lift is *content, not style* (the ablation)
+- Reasoning effort is *not* a lever (the v4-pro result)
+- Leak-free &amp; fully public (disjoint split, Haiku judge, 4-way taxonomy)
+
+**3. Section number "01" visibility.** Changed from `text-zinc-300` (near-invisible on the `zinc-50` background) to **`text-blue-600` semibold** — now a clear brand-accent anchor.
+
+**4. Section subtitles (deks) made prominent.** Restyled from small muted grey (`text-sm text-zinc-500`) to a **left-accented lead line**: blue left bar + `text-zinc-800`, `font-medium`, 15px. Each section's takeaway (e.g. *"no developer and no repo crosses the train/val/test line…"*) now reads as a callout, not a caption. Both fixes are in the shared `Heading`/`Section` components, so they apply to every section at once.
+
+**Status:** all edits are in the working tree and `out/` is rebuilt (verified: takeaways box, all 5 takeaway phrases, the results paragraph, 16× `text-blue-600`, 12× `border-blue-500` all present). Nothing is committed or deployed — given the earlier stale-build confusion, you'll only see this live after committing the rebuilt `out/` + redeploying (or running `npm run dev` locally). Want me to commit it, or spin up a local preview / screenshot so you can eyeball the new styling first?</result>
+<usage><subagent_tokens>226544</subagent_tokens><tool_uses>68</tool_uses><duration_ms>6132623</duration_ms></usage>
 </task-notification>
