@@ -23,6 +23,8 @@ const files = [
     desc: "Every trial (one JSON per line). Generation: {key, kind:'gen', point_id, slug, model, model_id, backend, effort, cond('distilled'|'generic'), text, ts, seed?}. Move label: {key:'lab:haiku:<hash>', move}. Join gens to labels via the 4-way classifier on (prev_agent, text)." },
   { local: `${SRC}/experiments/condagree_multi/cases.json`, name: "cases.json", ct: "application/json",
     desc: "Case-study data for glm-5.2 / gemini-3.1-pro / osim-4b: per-developer CondAgree ±profile (delta), and every moment where the profile flipped the move (with the agent turn, real message+move, and both ±profile generations+moves)." },
+  { local: `${SRC}/experiments/condagree_multi/category_recall.json`, name: "category_recall.json", ct: "application/json",
+    desc: "Per-move agree-rate (recall) for all 9 models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap." },
 ];
 
 const uploaded = [];

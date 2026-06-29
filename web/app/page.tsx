@@ -25,6 +25,23 @@ const MOVE_MIX = [
   { move: "approve", pct: 12.1, color: "bg-zinc-400" },
   { move: "inquiry", pct: 8.4, color: "bg-emerald-400" },
 ];
+// per-move agree-rate (recall): of moments whose real move was X, how often the sim matched.
+// d = profile minus no-profile; wp = with-profile rate. Source: bench/profileopt/category_recall.json
+const CATS = ["approve", "critical", "directive", "inquiry"] as const;
+const CAT = {
+  freq: { approve: 0.121, critical: 0.278, directive: 0.518, inquiry: 0.084 },
+  rows: [
+    { id: "glm-5.2", label: "GLM-5.2", d: { approve: 0.163, critical: 0.124, directive: 0.112, inquiry: 0.041 }, wp: { approve: 0.465, critical: 0.383, directive: 0.834, inquiry: 0.1 } },
+    { id: "osim-4b", label: "OSim-4B", d: { approve: 0.087, critical: 0.09, directive: 0.105, inquiry: -0.125 }, wp: { approve: 0.259, critical: 0.338, directive: 0.657, inquiry: 0.05 } },
+    { id: "osim-8b", label: "OSim-8B", d: { approve: 0.138, critical: 0.136, directive: 0.028, inquiry: -0.2 }, wp: { approve: 0.345, critical: 0.331, directive: 0.681, inquiry: 0.1 } },
+    { id: "claude-opus-4.8", label: "Claude-Opus-4.8", d: { approve: -0.015, critical: -0.052, directive: 0.076, inquiry: 0.011 }, wp: { approve: 0.163, critical: 0.474, directive: 0.69, inquiry: 0.094 } },
+    { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", d: { approve: 0.103, critical: -0.037, directive: 0.028, inquiry: 0.022 }, wp: { approve: 0.379, critical: 0.256, directive: 0.754, inquiry: 0.075 } },
+    { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", d: { approve: 0.138, critical: 0.03, directive: -0.04, inquiry: 0.028 }, wp: { approve: 0.345, critical: 0.271, directive: 0.742, inquiry: 0.128 } },
+    { id: "gpt-5.5", label: "GPT-5.5", d: { approve: -0.015, critical: -0.013, directive: -0.008, inquiry: -0.001 }, wp: { approve: 0.366, critical: 0.3, directive: 0.832, inquiry: 0.061 } },
+    { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", d: { approve: -0.002, critical: -0.045, directive: -0.002, inquiry: 0.0 }, wp: { approve: 0.354, critical: 0.215, directive: 0.813, inquiry: 0.029 } },
+    { id: "deepseek-v3.1", label: "DeepSeek-V3.1", d: { approve: 0.117, critical: 0.053, directive: -0.082, inquiry: -0.025 }, wp: { approve: 0.328, critical: 0.212, directive: 0.772, inquiry: 0.075 } },
+  ],
+};
 
 /* ----------------------------- primitives ----------------------------- */
 function Mono({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -139,6 +156,59 @@ function ProfileEffect({ exclude = [] }: { exclude?: string[] }) {
         The bars that reach right are the <span className="font-semibold text-violet-700">purpose-built OSim models</span> and{" "}
         <span className="font-semibold text-teal-700">GLM-5.2</span>. The strongest general models sit on the center line or just left of it:
         a profile gives them almost nothing.
+      </p>
+    </div>
+  );
+}
+// heatmap: per-move agree-rate, profile effect (Δ) as the tint + top number, with-profile rate as the small number
+function catTint(d: number) {
+  const a = Math.min(0.82, Math.abs(d) / 0.18);
+  return d >= 0 ? `rgba(16,185,129,${a})` : `rgba(244,63,94,${a})`;
+}
+function CategoryAgree({ exclude = [] }: { exclude?: string[] }) {
+  const rows = CAT.rows.filter((r) => !exclude.includes(r.id));
+  return (
+    <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
+      <div className="mb-1 text-xs font-semibold text-zinc-700">profile effect by move category: change in agree-rate when the profile is added</div>
+      <div className="mb-4 text-[11px] text-zinc-400">agree-rate(move) = of moments whose real move was that, how often the simulator matched · color and top number = profile Δ (green helps, red hurts) · small number = the with-profile rate</div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[28rem] border-separate border-spacing-1 text-center">
+          <thead>
+            <tr>
+              <th className="w-32" />
+              {CATS.map((c) => (
+                <th key={c} className="px-1 pb-1 align-bottom">
+                  <div className="font-mono text-[11px] font-semibold text-zinc-700">{c}</div>
+                  <div className="text-[9px] text-zinc-400">{Math.round(CAT.freq[c] * 100)}% of moves</div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="whitespace-nowrap pr-2 text-right font-mono text-[11px] text-zinc-700">{r.label}</td>
+                {CATS.map((c) => {
+                  const d = r.d[c];
+                  return (
+                    <td key={c} className="rounded" style={{ backgroundColor: catTint(d) }}>
+                      <div className="px-1 py-1">
+                        <div className={`font-mono text-[11px] font-semibold ${d > 0.005 ? "text-emerald-900" : d < -0.005 ? "text-rose-900" : "text-zinc-400"}`}>{d > 0 ? "+" : ""}{d.toFixed(2)}</div>
+                        <div className="font-mono text-[9px] text-zinc-500">{r.wp[c].toFixed(2)}</div>
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-3 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
+        <span className="font-semibold text-teal-700">GLM-5.2</span> is the only model that improves on every move (its row is all green). The{" "}
+        <span className="font-semibold text-violet-700">OSim</span> models gain on approve, critical, and directive but lose on the rare inquiry,
+        as the profile stops them over-asking. The strongest general models (GPT-5.5, Gemini-3.1-Pro) barely move. Columns are weighted by how
+        often developers actually make each move (directive 52%, inquiry only 8%).
       </p>
     </div>
   );
@@ -452,6 +522,11 @@ export default function Page() {
               n=20, treat individual lifts as suggestive, not settled.
             </p>
             <ProfileEffect exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <p>
+              That single number hides where the lift comes from. Breaking the agree-rate down by the kind of move the developer made shows
+              each model's profile is doing something different, move by move, the clearest tell for <em>why</em> it helps.
+            </p>
+            <CategoryAgree exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
             <p>
               So the headline average hides the real story: the profile is doing different jobs for different models. The next section takes
               one developer and three of these simulators to show exactly what those jobs are.
