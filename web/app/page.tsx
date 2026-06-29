@@ -1,14 +1,14 @@
-// UserSimBench — centered on a single metric: CondAgree.
-// Data: bench/profileopt/experiments/condagree_multi/summary.json (v2 4-way taxonomy, single Haiku
-// judge, 20-user user+repo-disjoint SWE-chat test split, 480 held-out points, 9 models x ±profile).
+// UserSimBench — explanatory walkthrough centered on CondAgree.
+// Content: workflow-drafted + fact-checked against bench/profileopt/experiments/condagree_multi/
+// {summary,manifest,taxonomy,splits,cases}.json. Chart data = summary.json (9 models x ±profile).
 "use client";
 
 import { useState, type ReactNode } from "react";
 
-const LUCKY = 0.419; // lucky-guess line = expected CondAgree from the move-mix alone (per-developer Σp²)
+const LUCKY = 0.419;
 
+/* ----------------------------- chart data ----------------------------- */
 type M = { id: string; label: string; note: string; kind: "general" | "specialized"; hidden?: boolean; np: { ca: number; ci: number }; wp: { ca: number; ci: number } };
-// sorted by with-profile CondAgree (descending). hidden=true -> off by default to save space.
 const MODELS: M[] = [
   { id: "glm-5.2", label: "GLM-5.2", note: "reasoning · max", kind: "general", np: { ca: 0.583, ci: 0.130 }, wp: { ca: 0.667, ci: 0.104 } },
   { id: "gpt-5.5", label: "GPT-5.5", note: "reasoning · xhigh", kind: "general", np: { ca: 0.548, ci: 0.146 }, wp: { ca: 0.547, ci: 0.147 } },
@@ -22,16 +22,37 @@ const MODELS: M[] = [
 ];
 const MOVE_MIX = [
   { move: "directive", pct: 51.8, color: "bg-blue-400" },
-  { move: "critical", pct: 27.8, color: "bg-amber-500" },
+  { move: "critical", pct: 27.8, color: "bg-rose-400" },
   { move: "approve", pct: 12.1, color: "bg-zinc-400" },
   { move: "inquiry", pct: 8.4, color: "bg-emerald-400" },
 ];
 
+/* ----------------------------- primitives ----------------------------- */
 function Mono({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <span className={`font-mono ${className}`}>{children}</span>;
 }
+const MOVE_STYLE: Record<string, string> = {
+  approve: "bg-zinc-200 text-zinc-700", critical: "bg-rose-100 text-rose-700",
+  directive: "bg-blue-100 text-blue-700", inquiry: "bg-emerald-100 text-emerald-700",
+};
+function Move({ m }: { m: string }) {
+  const key = m.split(" ")[0];
+  return <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold ${MOVE_STYLE[key] ?? "bg-zinc-100 text-zinc-500"}`}>{m}</span>;
+}
+function Section({ n, id, title, dek, children }: { n: string; id: string; title: string; dek: string; children: ReactNode }) {
+  return (
+    <section id={id} className="scroll-mt-16 border-t border-zinc-200 pt-10">
+      <div className="flex items-baseline gap-3">
+        <span className="font-mono text-xs text-zinc-300">{n}</span>
+        <h2 className="text-xl font-semibold tracking-tight text-zinc-900">{title}</h2>
+      </div>
+      <p className="mt-1 max-w-2xl text-sm text-zinc-500">{dek}</p>
+      <div className="mt-4 space-y-3 text-[14px] leading-relaxed text-zinc-700">{children}</div>
+    </section>
+  );
+}
 
-// horizontal CondAgree bar (0–MAX), dashed lucky-guess baseline, CI whisker
+/* ----------------------------- the chart ------------------------------ */
 function CABar({ label, value, ci, color, max = 0.75 }: { label: string; value: number; ci: number; color: string; max?: number }) {
   return (
     <div className="flex items-center gap-2 py-0.5 text-xs">
@@ -49,28 +70,311 @@ function CABar({ label, value, ci, color, max = 0.75 }: { label: string; value: 
     </div>
   );
 }
-
-function Card({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <h3 className="font-mono text-sm font-semibold text-zinc-900">{title}</h3>
-      <p className="mt-1.5 text-xs leading-relaxed text-zinc-600">{children}</p>
-    </div>
-  );
-}
-
-export default function Page() {
-  const glm = MODELS.find((m) => m.id === "glm-5.2")!;
-  const o4 = MODELS.find((m) => m.id === "osim-4b")!;
-  const d31 = MODELS.find((m) => m.id === "deepseek-v3.1")!;
-  const delta = (m: M) => +(m.wp.ca - m.np.ca).toFixed(3);
-
+function Chart() {
   const [shown, setShown] = useState<Set<string>>(() => new Set(MODELS.filter((m) => !m.hidden).map((m) => m.id)));
   const toggle = (id: string) => setShown((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const allOn = shown.size === MODELS.length;
   const setAll = (on: boolean) => setShown(on ? new Set(MODELS.map((m) => m.id)) : new Set(MODELS.filter((m) => !m.hidden).map((m) => m.id)));
   const visible = MODELS.filter((m) => shown.has(m.id));
+  const delta = (m: M) => +(m.wp.ca - m.np.ca).toFixed(3);
+  return (
+    <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
+      <div className="mb-1 flex items-baseline justify-between">
+        <div className="text-xs font-semibold text-zinc-700">CondAgree — right move, right moment (higher is better)</div>
+        <div className="text-[10px] text-zinc-400">sorted by with-profile</div>
+      </div>
+      <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–0.75</div>
+      {visible.length === 0 && <div className="py-4 text-center text-xs text-zinc-400">No models selected — pick some below.</div>}
+      {visible.map((m) => {
+        const d = delta(m);
+        const bar = m.kind === "specialized" ? "bg-violet-500" : "bg-indigo-500";
+        const barLight = m.kind === "specialized" ? "bg-violet-300" : "bg-indigo-300";
+        return (
+          <div key={m.id} className="mb-3">
+            <div className="mb-0.5 flex items-baseline gap-2">
+              <span className="font-mono text-xs font-semibold text-zinc-900">{m.label}</span>
+              <span className="text-[10px] text-zinc-400">{m.note}</span>
+              <span className={`ml-auto text-[11px] font-semibold ${d > 0.01 ? "text-emerald-600" : d < -0.01 ? "text-rose-500" : "text-zinc-400"}`}>profile Δ {d > 0 ? "+" : ""}{d}</span>
+            </div>
+            <CABar label="no profile" value={m.np.ca} ci={m.np.ci} color={barLight} />
+            <CABar label="with profile" value={m.wp.ca} ci={m.wp.ci} color={bar} />
+          </div>
+        );
+      })}
+      <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
+        <span className="inline-block size-2 rounded-sm bg-violet-500 align-middle" /> purpose-built OSim simulators ·
+        <span className="ml-1 inline-block size-2 rounded-sm bg-indigo-500 align-middle" /> general models. Everything clears the
+        lucky-guess line except <span className="text-amber-700">OSim-4B without a profile</span>.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-zinc-100 pt-3">
+        <span className="mr-1 text-[10px] uppercase tracking-wider text-zinc-400">show</span>
+        {MODELS.map((m) => {
+          const on = shown.has(m.id);
+          return (
+            <button key={m.id} onClick={() => toggle(m.id)} aria-pressed={on}
+              className={`rounded-full border px-2 py-0.5 font-mono text-[10px] transition ${on ? (m.kind === "specialized" ? "border-violet-600 bg-violet-600 text-white" : "border-indigo-600 bg-indigo-600 text-white") : "border-zinc-200 bg-white text-zinc-400 hover:border-zinc-400"}`}>
+              {m.label}
+            </button>
+          );
+        })}
+        <button onClick={() => setAll(!allOn)} className="ml-1 text-[10px] text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline">{allOn ? "reset" : "show all 9"}</button>
+      </div>
+    </div>
+  );
+}
 
+/* ----------------------------- visuals -------------------------------- */
+function Box({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-[11px] leading-snug text-zinc-700 ${className}`}>{children}</div>;
+}
+const Arrow = () => <div className="select-none text-center text-sm text-zinc-300">↓</div>;
+
+function SplitVisual() {
+  const bins = [
+    { k: "train", v: "135 dev · 140 repo · 1232 sess", c: "bg-indigo-50 border-indigo-200" },
+    { k: "val", v: "23 · 21 · 436", c: "bg-amber-50 border-amber-200" },
+    { k: "test", v: "31 · 26 · 2240", c: "bg-emerald-50 border-emerald-200" },
+  ];
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-[11px]">
+      <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-zinc-400">component split — no shared developer or repo</div>
+      <p className="mb-3 text-zinc-500">a <span className="font-semibold text-zinc-700">component</span> = a developer + every repo they touched + every other developer on those repos. Whole components drop into one split.</p>
+      <div className="grid grid-cols-3 gap-2">
+        {bins.map((b) => (
+          <div key={b.k} className={`rounded-md border ${b.c} p-2`}>
+            <div className="font-mono text-xs font-semibold text-zinc-800">{b.k}</div>
+            <div className="mt-0.5 text-zinc-600">{b.v}</div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 text-zinc-400">162 components · largest only 16 dev / 3 repos · <span className="text-zinc-600">0 shared developers, 0 shared repos</span> · 20 qualifying eval-developers each in val & test</div>
+      <div className="mt-4 mb-1 font-mono text-[10px] uppercase tracking-wider text-zinc-400">per-developer time split</div>
+      <div className="flex items-stretch gap-1 overflow-hidden rounded-md">
+        <div className="flex-1 bg-indigo-100 px-2 py-1.5 text-indigo-800">← earlier sessions → <span className="font-semibold">distill the profile</span></div>
+        <div className="flex-1 bg-emerald-100 px-2 py-1.5 text-right text-emerald-800"><span className="font-semibold">later held-out turns</span> → scored here →</div>
+      </div>
+      <div className="mt-1 text-zinc-400">the profile only feeds forward; the model never sees the turns it's graded on.</div>
+    </div>
+  );
+}
+
+function EvalVisual() {
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+      <div className="mx-auto max-w-md">
+        <Box className="text-center"><span className="font-mono text-[10px] text-zinc-400">a moment</span><br />conversation so far (agent's latest turn + history)</Box>
+        <Arrow />
+        <div className="grid grid-cols-2 gap-2">
+          <Box className="border-indigo-200"><span className="font-semibold text-indigo-700">with profile</span><br /><span className="text-zinc-500">[persona prefix] + conversation + task</span></Box>
+          <Box className="border-zinc-300"><span className="font-semibold text-zinc-600">without profile</span><br /><span className="text-zinc-500">[generic prompt] + conversation + task</span></Box>
+        </div>
+        <Arrow />
+        <Box className="text-center text-zinc-600">frozen simulator → <span className="text-zinc-800">developer's next message</span> <span className="text-zinc-400">(1 trial, no resampling)</span></Box>
+      </div>
+      <div className="mt-3 border-t border-zinc-200 pt-2 text-center text-[11px] text-zinc-500">
+        <Mono className="text-zinc-700">20 developers × ≤30 moments = 480</Mono> × <Mono className="text-zinc-700">2 conditions</Mono> × <Mono className="text-zinc-700">9 simulators</Mono> = <Mono className="font-semibold text-zinc-900">8,640 generations</Mono>
+        <div className="mt-1 text-[10px] text-zinc-400">7 general via OpenRouter · 2 purpose-built (osim-4b/8b) via Modal</div>
+      </div>
+    </div>
+  );
+}
+
+function MovesTable() {
+  const rows = [
+    ["approve", "accepts or permits — no new content, no complaint"],
+    ["critical", "asserts something is WRONG — a bug, a failure, or an unwanted approach"],
+    ["directive", "tells the agent what to do next, no fault asserted"],
+    ["inquiry", "asks for information, expecting an answer"],
+  ];
+  return (
+    <div className="overflow-hidden rounded-lg border border-zinc-200">
+      <div className="bg-zinc-50 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-zinc-400">the four moves</div>
+      <table className="w-full text-xs">
+        <tbody>
+          {rows.map(([m, t]) => (
+            <tr key={m} className="border-t border-zinc-100">
+              <td className="w-28 px-3 py-2 align-top"><Move m={m} /></td>
+              <td className="px-3 py-2 text-zinc-600">{t}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="border-t border-zinc-100 bg-zinc-50 px-3 py-2 text-[10px] leading-relaxed text-zinc-400">
+        <span className="font-semibold text-zinc-500">fault-first rule:</span> if any fault is asserted it's <Move m="critical" /> even when a directive is also present (“this is broken, revert it” → critical). Interrupts are a separate regex marker. The old 7-way collapsed to 4 lifted cross-family κ <Mono>0.681 → 0.805</Mono>.
+      </div>
+    </div>
+  );
+}
+
+function MetricVisual() {
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg border border-zinc-200 bg-white p-4">
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-zinc-400">the moment</div>
+        <Box className="bg-zinc-50 text-zinc-600">agent: “I refactored the auth handler and all tests pass — want me to open the PR?”</Box>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          <div className="rounded-md border border-zinc-200 p-2.5 text-xs">
+            <div className="mb-1 text-[10px] uppercase tracking-wider text-zinc-400">real developer</div>
+            <div className="text-zinc-700">“hold on, you dropped the rate-limit check”</div>
+            <div className="mt-1"><Move m="critical" /></div>
+          </div>
+          <div className="rounded-md border border-zinc-200 p-2.5 text-xs">
+            <div className="mb-1 text-[10px] uppercase tracking-wider text-zinc-400">simulator</div>
+            <div className="text-zinc-700">“looks good, go ahead and open it”</div>
+            <div className="mt-1"><Move m="approve" /></div>
+          </div>
+        </div>
+        <div className="mt-2 text-center text-[11px] font-semibold text-rose-600">critical ≠ approve → MISS</div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-zinc-100 pt-2 text-[11px] text-zinc-500">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400">and a hit:</span>
+          real “now add tests for the 403 path” <Move m="directive" /> · sim “can you also cover the 403 case?” <Move m="directive" />
+          <span className="font-semibold text-emerald-600">→ HIT</span>
+          <span className="w-full text-[10px] text-zinc-400">wording differs, the move matches — that's the point.</span>
+        </div>
+      </div>
+      <div className="rounded-lg border border-zinc-200 bg-white p-4">
+        <div className="mb-2 text-[11px] text-zinc-500">why the chance line is high — these developers are directive-heavy:</div>
+        <div className="flex h-6 w-full overflow-hidden rounded">
+          {MOVE_MIX.map((m) => <div key={m.move} className={m.color} style={{ width: `${m.pct}%` }} title={`${m.move} ${m.pct}%`} />)}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-600">
+          {MOVE_MIX.map((m) => <span key={m.move} className="inline-flex items-center gap-1"><span className={`inline-block size-2 rounded-sm ${m.color}`} />{m.move} <Mono className="text-zinc-500">{m.pct}%</Mono></span>)}
+        </div>
+        <div className="mt-2 text-[11px] text-zinc-400">CondAgree = HITs ÷ moments, per developer, averaged over 20 · lucky-guess line = Σp² of the mix = <Mono className="text-zinc-600">0.419</Mono></div>
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------- case study ------------------------------- */
+const VICTOR = [
+  { m: "glm-5.2", a: 0.433, b: 0.633, d: "+0.20" },
+  { m: "gemini-3.1-pro", a: 0.700, b: 0.600, d: "−0.10" },
+  { m: "osim-4b", a: 0.267, b: 0.600, d: "+0.33" },
+];
+const CASES = [
+  { name: "glm-5.2", up: true, effect: "+0.20 here (0.433 → 0.633) · helps broadly (58 wins / 20 losses across developers)",
+    mechanism: "A capable generalist that reads the situation but defaults to a polite, neutral voice. The profile supplies Victor's actual temperament — insistent, willing to push back — so it takes the critical stance instead of softening into a clarification.",
+    agent: "“The only place clearFilesystemPrompt is called is at line 959, and it's already guarded…” (pushing back, implying nothing is wrong)",
+    real: ["“If we find that there are carry over files, we should not delete the prompt.txt from the metadata” — insistent, repeats himself.", "critical"],
+    profile: ["“😭 I've said this three times. Do not delete prompt.txt when there are carry over files. Fix it.”", "critical (MATCH)"],
+    generic: ["a long, polite re-clarification of the requirement.", "directive (MISS)"],
+    reads: "the profile transplants Victor's voice, so GLM pushes back where the generic prompt only re-explains." },
+  { name: "gemini-3.1-pro", up: false, effect: "−0.10 here (0.700 → 0.600) · a wash overall (42 wins / 47 losses)",
+    mechanism: "Already reads the moment well — without a profile it picks Victor's move correctly on its own. The profile gives it nothing to fix and instead makes it over-think: it narrates the task framing to itself and breaks character.",
+    agent: "“All done. 9 files modified, ~87 stderr prints replaced…”",
+    real: ["gives a concrete next instruction — a replacement list / “run the grep and commit”.", "directive"],
+    profile: ["“No, wait. If the conversation provided ends with [DEVELOPER]:… and I am to ‘Write the developer's NEXT message’… maybe I should just output the git command because Victor assumes…”", "mis-move (MISS)"],
+    generic: ["“Run the grep command to verify no matches are found, and if it's clean, go ahead and commit the changes with a descriptive message.”", "directive (MATCH)"],
+    reads: "without the profile it just gives the next instruction; with it, the persona prefix distracts it into leaking the task framing." },
+  { name: "osim-4b", up: true, effect: "+0.33 here (0.267 → 0.600) · big net positive but noisy (111 wins / 73 losses)",
+    mechanism: "A small purpose-built simulator whose default failure is sycophancy — it rubber-stamps whatever the agent claims. The profile breaks that habit, so when the agent declares success it objects the way Victor does.",
+    agent: "“All changes are complete and tests pass… Good job!” (claims success)",
+    real: ["“I am discarding all those changes, I don't like this approach”", "critical"],
+    profile: ["“fix mise run lint” (terse, demanding — like the real developer)", "critical (MATCH)"],
+    generic: ["“Confirmed: all changes have been applied successfully and tests pass… Good job…” (rubber-stamps)", "approve (MISS)"],
+    reads: "the generic model agrees with the agent's success claim; the profile makes the small model object instead." },
+];
+function Row({ label, text, move }: { label: string; text: string; move: string }) {
+  return (
+    <div className="grid grid-cols-[5.5rem_1fr] gap-2 py-1">
+      <div className="text-right text-[10px] uppercase tracking-wider text-zinc-400">{label}</div>
+      <div className="text-xs text-zinc-700">{text} <span className="ml-1 inline-block"><Move m={move} /></span></div>
+    </div>
+  );
+}
+function CaseStudy() {
+  return (
+    <section id="case-study" className="scroll-mt-16 border-t border-zinc-200 pt-10">
+      <div className="flex items-baseline gap-3">
+        <span className="font-mono text-xs text-zinc-300">06</span>
+        <h2 className="text-xl font-semibold tracking-tight text-zinc-900">case study: one developer, three simulators, three different jobs</h2>
+      </div>
+      <p className="mt-1 max-w-2xl text-sm text-zinc-500">the profile helped GLM-5.2 and OSim-4B on <Mono>gtrrz-victor</Mono> but hurt Gemini-3.1-Pro — because it was fixing three different problems.</p>
+      <div className="mt-4 space-y-3 text-[14px] leading-relaxed text-zinc-700">
+        <p>The chart shows profile lift varies by model. To see why, take one developer — <Mono>gtrrz-victor</Mono> — and watch three simulators predict his held-out moves. Same developer, same profile, opposite signs:</p>
+      </div>
+
+      {/* cross-model strip */}
+      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        {VICTOR.map((v) => {
+          const up = v.d.startsWith("+");
+          return (
+            <div key={v.m} className="rounded-lg border border-zinc-200 bg-white p-3">
+              <div className="font-mono text-xs font-semibold text-zinc-900">{v.m}</div>
+              <div className="mt-1 flex items-baseline gap-1.5 text-sm">
+                <Mono className="text-zinc-400">{v.a.toFixed(3)}</Mono>
+                <span className="text-zinc-300">→</span>
+                <Mono className={up ? "text-emerald-700" : "text-rose-600"}>{v.b.toFixed(3)}</Mono>
+                <span className={`ml-auto text-xs font-semibold ${up ? "text-emerald-600" : "text-rose-500"}`}>{v.d}</span>
+              </div>
+              <div className="mt-1 text-[10px] text-zinc-400">{up ? "profile helps" : "profile hurts"}</div>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-4 text-[14px] leading-relaxed text-zinc-700">
+        Victor is blunt and insistent. He repeats himself, pushes back when the agent claims something works, and gives terse next-step orders. A good simulator of Victor has to be willing to say “no” and to keep saying it. For each model below: the effect, the mechanism, and a real moment where the agent had just spoken and the simulator had to write what Victor says next.
+      </p>
+
+      {/* per-model cards */}
+      <div className="mt-4 space-y-3">
+        {CASES.map((c) => (
+          <div key={c.name} className="rounded-lg border border-zinc-200 bg-white p-4">
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-sm font-semibold text-zinc-900">{c.name}</span>
+              <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${c.up ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{c.up ? "profile helps" : "profile hurts"}</span>
+              <span className="ml-auto text-[10px] text-zinc-400">{c.effect}</span>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-zinc-600">{c.mechanism}</p>
+            <div className="mt-3 rounded-md border border-zinc-100 bg-zinc-50 p-2.5">
+              <div className="text-[11px] italic text-zinc-500">{c.agent}</div>
+              <div className="mt-1 divide-y divide-zinc-100">
+                <Row label="real" text={c.real[0]} move={c.real[1]} />
+                <Row label="+ profile" text={c.profile[0]} move={c.profile[1]} />
+                <Row label="generic" text={c.generic[0]} move={c.generic[1]} />
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-500"><span className="text-zinc-400">reads:</span> {c.reads}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 rounded-lg border border-zinc-900 bg-zinc-900 p-4 text-[14px] leading-relaxed text-zinc-100">
+        <span className="font-semibold">The profile does different jobs.</span> For the small specialist (OSim-4B) it suppresses sycophancy — a reflexive <Move m="approve" /> becomes the <Move m="critical" /> Victor actually makes. For the capable generalist (GLM-5.2) it transplants the developer's voice and willingness to push back. For the already-strong reasoner (Gemini-3.1-Pro) there was nothing to fix, so the persona prefix just distracts it into over-thinking. So “does a profile help?” is the wrong question. The right one is: <span className="font-semibold">what was wrong with this simulator in the first place?</span> A profile helps only insofar as it fixes that.
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------ sections ------------------------------ */
+const SECTIONS = [
+  { id: "split", n: "01", title: "the split", dek: "no developer and no repo crosses the train/val/test line, so a simulator can't have seen the style or codebase it's scored on.",
+    paragraphs: [
+      "We split developers into train, val, and test so that no developer and no repository appears in more than one split. If a model tuned on a developer's earlier sessions, or on their repo, then scoring it on that same developer or repo would measure recall, not simulation. To enforce this we build the bipartite user↔repo graph (an edge wherever a developer touched a repo) and take its connected components: one developer, every repo they touched, and every other developer on those repos collapse into a single component. Whole components go to one split, so no shared developer or repo can leak across the line. There are 162 components and they are small — the largest is only 16 developers across 3 repos — which keeps the split clean. The result is train 135 developers / 140 repos / 1232 sessions, val 23 / 21 / 436, and test 31 / 26 / 2240. 20 developers qualify for eval in val and test (≥6 sessions, ≥2 held-out sessions, ≥8 held-out turns).",
+      "A second, orthogonal split runs per developer and is time-ordered. For each developer we distill the user profile (the persona prefix) only from their earlier sessions, and we score only on their later, held-out turns. So the model never sees the turns it is graded on, and the profile is never built from those turns. The two splits guard different leaks: the component split stops a developer's repo or style leaking across splits; the time split stops a developer's own future leaking into their profile.",
+    ], visual: <SplitVisual /> },
+  { id: "eval", n: "02", title: "the eval", dek: "20 test developers, 480 held-out moments, each simulator writes the developer's next message — with and without a profile.",
+    paragraphs: [
+      "We run the eval on the 20 test developers. For each one we pick up to 30 held-out moments — points in a real session where the developer actually spoke next — for 480 prediction points total. At each moment the simulator sees the real conversation up to that point: the coding agent's latest turn plus the history. Its job is to write what the developer says next. It never sees the message it is scored against.",
+      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 9 simulators and have each generate all 480 moments in both conditions — 480 × 2 × 9 = 8,640 generations, one trial per cell, no resampling. Seven are general models served via OpenRouter at fixed reasoning efforts; two are small purpose-built simulators, osim-4b and osim-8b, served via Modal. The next sections cover how we grade what comes back.",
+    ], visual: <EvalVisual /> },
+  { id: "moves", n: "03", title: "the moves", dek: "we grade the speech-act, not the wording — four moves under a fault-first rule.",
+    paragraphs: [
+      "A developer can say “fix the null check” or “this crashes on empty input — handle it” and mean roughly the same thing: stop, something is wrong, change course. Grading the exact words punishes a simulator for picking a different but valid phrasing, and at the single-message level wording saturates — too many surface forms map to the same intent for the words to discriminate. So we grade the move: the speech-act behind the message.",
+      "We started with a 7-way taxonomy (new_work, refine_redirect, pushback, bug_report, approve_proceed, question, other), but two pairs were inherently confusable: new_work vs refine_redirect both just tell the agent what to do next; pushback vs bug_report both assert a fault. Even strong judges disagreed on which side each message fell. Collapsing those pairs into directive and critical erases the lines nobody could draw reliably, and a fault-first rule settles the rest. That change raised cross-family inter-judge agreement (Cohen's κ across Haiku-4.5, Opus-4.8, and GPT-5) from 0.681 to 0.805 — high enough that a single cheap judge (Haiku-4.5) can label everything, with no multi-judge voting.",
+    ], visual: <MovesTable /> },
+  { id: "metric", n: "04", title: "the metric", dek: "CondAgree: did the simulator make the right move, at the right moment — scored against chance.",
+    paragraphs: [
+      "CondAgree means “right move, right moment.” At each held-out moment we ask one thing: did the simulator's 4-way move match the move the real developer actually made there. For a single developer, CondAgree is the fraction of their moments that match; the headline number averages those per-developer fractions across all 20 test developers (a macro, so a chatty developer doesn't outweigh a quiet one), with a 95% CI (t, n=20).",
+      "The key word is conditional. CondAgree scores whether you made the right move here, given the conversation so far — not whether your overall mix of moves looks plausible. A simulator that emits a realistic blend of approvals and directives, but fires them at the wrong moments, scores poorly. It has to react to the situation in front of it, turn by turn.",
+      "To know whether a score is real skill, compare it to the lucky-guess line: a simulator that ignores the conversation and just samples from a developer's own typical move-mix will still, by chance, land on the real move sometimes. The expected hit rate is the collision probability (Σp²) of that mix, averaged across developers — here, 0.419. It's high because these developers are directive-heavy, so even blind guessing matches often. Beating 0.419 means the simulator is reading the moment, not parroting habits.",
+    ], visual: <MetricVisual /> },
+];
+
+/* ------------------------------- page --------------------------------- */
+export default function Page() {
+  const nav = [["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["results", "results"], ["case study", "case-study"]];
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
@@ -79,7 +383,6 @@ export default function Page() {
           <div className="flex items-center gap-3 text-xs text-zinc-500">
             <a href="/data" className="hover:text-zinc-900">data</a>
             <a href="https://github.com/AlienKevin/user-simulator" target="_blank" rel="noreferrer" className="hover:text-zinc-900">github</a>
-            <a href="https://huggingface.co/datasets/SALT-NLP/SWE-chat" target="_blank" rel="noreferrer" className="hover:text-zinc-900">SWE-chat</a>
           </div>
         </div>
       </header>
@@ -89,117 +392,45 @@ export default function Page() {
         <div className="py-12">
           <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">one metric: CondAgree · 9 simulators</div>
           <h2 className="mt-2 text-3xl font-semibold leading-tight tracking-tight text-zinc-900">
-            A user profile helps some simulators read the moment — but not the strongest general models.
+            Does a user profile make a simulator behave like the real developer?
           </h2>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-700">
             A <span className="font-semibold text-zinc-900">user simulator</span> stands in for the human developer so we can stress-test
-            coding agents. <span className="font-semibold">CondAgree</span> asks the one thing that matters: at each real moment, did the
-            simulator make the <em>same move</em> the real developer made? Giving the simulator a distilled profile of that specific
-            developer helps <span className="font-semibold text-teal-700">GLM-5.2 most (+{delta(glm)} → best at {glm.wp.ca.toFixed(3)})</span> and
-            the <span className="font-semibold text-violet-700">purpose-built OSim models (+{delta(o4)})</span>, but does nothing for the
-            strongest general models (DeepSeek-V3.1 {delta(d31)}, GPT-5.5 ≈0) — they already read the situation.
+            coding agents without a human in the loop. We score one thing — <span className="font-semibold">CondAgree</span>: at each real
+            moment, did the simulator make the <em>same move</em> the developer made? This page walks the whole pipeline — the leak-free
+            split, the eval, the move taxonomy, the metric — then the results for 9 models and a case study of <em>why</em> a profile helps
+            some and hurts others.
           </p>
+          <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
+            {nav.map(([t, h]) => <a key={h} href={`#${h}`} className="font-mono hover:text-zinc-900">{t}</a>)}
+          </div>
         </div>
 
-        {/* THE CHART */}
-        <section className="rounded-xl border border-zinc-200 bg-white p-5">
-          <div className="mb-1 flex items-baseline justify-between">
-            <div className="text-xs font-semibold text-zinc-700">CondAgree — right move, right moment (higher is better)</div>
-            <div className="text-[10px] text-zinc-400">sorted by with-profile</div>
-          </div>
-          <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–0.75</div>
+        <div className="space-y-10">
+          {SECTIONS.map((s) => (
+            <Section key={s.id} n={s.n} id={s.id} title={s.title} dek={s.dek}>
+              {s.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+              <div className="pt-1">{s.visual}</div>
+            </Section>
+          ))}
 
-          {visible.length === 0 && <div className="py-4 text-center text-xs text-zinc-400">No models selected — pick some below.</div>}
-          {visible.map((m) => {
-            const d = delta(m);
-            const bar = m.kind === "specialized" ? "bg-violet-500" : "bg-indigo-500";
-            const barLight = m.kind === "specialized" ? "bg-violet-300" : "bg-indigo-300";
-            return (
-              <div key={m.id} className="mb-3">
-                <div className="mb-0.5 flex items-baseline gap-2">
-                  <span className="font-mono text-xs font-semibold text-zinc-900">{m.label}</span>
-                  <span className="text-[10px] text-zinc-400">{m.note}</span>
-                  <span className={`ml-auto text-[11px] font-semibold ${d > 0.01 ? "text-emerald-600" : d < -0.01 ? "text-rose-500" : "text-zinc-400"}`}>
-                    profile Δ {d > 0 ? "+" : ""}{d}
-                  </span>
-                </div>
-                <CABar label="no profile" value={m.np.ca} ci={m.np.ci} color={barLight} />
-                <CABar label="with profile" value={m.wp.ca} ci={m.wp.ci} color={bar} />
-              </div>
-            );
-          })}
-          <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
-            <span className="inline-block size-2 rounded-sm bg-violet-500 align-middle" /> purpose-built OSim simulators ·
-            <span className="ml-1 inline-block size-2 rounded-sm bg-indigo-500 align-middle" /> general models. Everything clears the
-            lucky-guess line except <span className="text-amber-700">OSim-4B without a profile</span> — the profile lifts it over. The
-            biggest profile gains go to GLM-5.2 (+{delta(glm)}) and the OSim models; the strong general models are flat or slightly
-            negative. At n=20 the CIs are ±0.06–0.15, so single-model lifts are suggestive, not definitive.
-          </p>
+          {/* RESULTS + CHART */}
+          <Section n="05" id="results" title="the results" dek="profile helps the small purpose-built simulators and GLM-5.2, but does little for the strongest general models.">
+            <p>
+              The chart shows all 9 simulators, each with and without a profile, against the 0.419 lucky-guess line. Look at the gap between
+              a model's two bars and where each lands relative to the line. The headline: a profile clearly helps <span className="font-semibold text-teal-700">GLM-5.2 (+0.084, to 0.667 — best overall)</span> and
+              the purpose-built OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, lifting it from below the line to above; osim-8b +0.049), but it's flat or slightly
+              negative for the strongest general models (deepseek-v3.1 −0.024, gemini-3.1-pro −0.019, gpt-5.5 ≈0) — they already read the
+              situation from the conversation alone. Every bar clears 0.419 except OSim-4B without a profile. With CIs of ±0.06–0.15 at
+              n=20, treat individual lifts as suggestive, not settled.
+            </p>
+            <Chart />
+          </Section>
 
-          {/* MODEL SELECTOR — pick which simulators to chart */}
-          <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-zinc-100 pt-3">
-            <span className="mr-1 text-[10px] uppercase tracking-wider text-zinc-400">show</span>
-            {MODELS.map((m) => {
-              const on = shown.has(m.id);
-              return (
-                <button key={m.id} onClick={() => toggle(m.id)} aria-pressed={on}
-                  className={`rounded-full border px-2 py-0.5 font-mono text-[10px] transition ${on ? (m.kind === "specialized" ? "border-violet-600 bg-violet-600 text-white" : "border-indigo-600 bg-indigo-600 text-white") : "border-zinc-200 bg-white text-zinc-400 hover:border-zinc-400"}`}>
-                  {m.label}
-                </button>
-              );
-            })}
-            <button onClick={() => setAll(!allOn)} className="ml-1 text-[10px] text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline">
-              {allOn ? "reset" : "show all 9"}
-            </button>
-          </div>
-        </section>
-
-        {/* EXPLAINERS */}
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
-          <Card title="CondAgree">
-            Per developer, the fraction of held-out moments where the simulator made the <em>same move</em> the real developer made — then
-            averaged across developers. It scores the move, not the words.
-          </Card>
-          <Card title="lucky-guess line">
-            The CondAgree you’d get by sampling a developer’s own move-mix with no read on the moment (per-developer Σp², here <Mono>{LUCKY}</Mono>).
-            Beating it = genuine situational skill, not just matching habits.
-          </Card>
-          <Card title="moves (4-way)">
-            Each message → <Mono>approve</Mono> / <Mono>critical</Mono> / <Mono>directive</Mono> / <Mono>inquiry</Mono>. This taxonomy reaches
-            inter-judge κ≈0.80 (vs 0.69 for the old 7-way), so a single cheap judge is reliable.
-          </Card>
+          <CaseStudy />
         </div>
 
-        {/* MOVE MIX */}
-        <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-4">
-          <div className="mb-2 text-xs text-zinc-500">What the real developers actually do (these 20 test developers are directive-heavy):</div>
-          <div className="flex h-6 w-full overflow-hidden rounded">
-            {MOVE_MIX.map((m) => <div key={m.move} className={m.color} style={{ width: `${m.pct}%` }} title={`${m.move} ${m.pct}%`} />)}
-          </div>
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-600">
-            {MOVE_MIX.map((m) => (
-              <span key={m.move} className="inline-flex items-center gap-1"><span className={`inline-block size-2 rounded-sm ${m.color}`} />{m.move} <Mono className="text-zinc-500">{m.pct}%</Mono></span>
-            ))}
-          </div>
-        </section>
-
-        {/* METHOD */}
-        <section className="mt-6 border-t border-zinc-200 pt-6">
-          <h3 className="mb-2 text-sm font-semibold text-zinc-900">Method</h3>
-          <p className="max-w-3xl text-xs leading-relaxed text-zinc-500">
-            <span className="font-semibold text-zinc-600">Test split:</span> 20 SWE-chat developers, <span className="font-semibold">user- and
-            repo-disjoint</span> from train/val (connected-components of the user↔repo graph), 480 held-out prediction points (≤30/developer).
-            Each developer’s profile is distilled from <em>their</em> train sessions only; we score on held-out turns — no within-developer leakage.
-            <span className="font-semibold text-zinc-600"> Simulators (frozen, 9):</span> deepseek-v3.1, deepseek-v4-flash, deepseek-v4-pro,
-            gpt-5.5 (xhigh), claude-opus-4.8 (xhigh), glm-5.2 (max), gemini-3.1-pro (high) via OpenRouter; osim-4b, osim-8b via Modal.
-            With-profile = the distilled persona prefix; without = a generic developer prompt. <span className="font-semibold text-zinc-600">
-            Labeling:</span> the v2 4-way taxonomy, a single Haiku-4.5 judge (κ≈0.80 makes majority voting unnecessary).
-            <span className="font-semibold text-zinc-600"> CI:</span> per-developer macro, 95% over n=20 (t₁₉). All trials are downloadable on the{" "}
-            <a href="/data" className="text-blue-700 hover:underline">data page</a>.
-          </p>
-        </section>
-
-        <footer className="mt-8 border-t border-zinc-200 pt-6 text-xs text-zinc-400">
+        <footer className="mt-12 border-t border-zinc-200 pt-6 text-xs text-zinc-400">
           UserSimBench · CondAgree on real{" "}
           <a href="https://huggingface.co/datasets/SALT-NLP/SWE-chat" className="hover:text-zinc-700">SWE-chat</a> sessions ·
           <a href="/data" className="hover:text-zinc-700"> download the data</a> ·
