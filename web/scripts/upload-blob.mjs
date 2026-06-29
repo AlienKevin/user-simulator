@@ -10,7 +10,7 @@ const PFX = "data/condagree_multi";
 
 const files = [
   { local: `${SRC}/experiments/condagree_multi/summary.json`, name: "summary.json", ct: "application/json",
-    desc: "Headline results: per (model, condition) CondAgree macro mean + 95% CI + per-user array; lucky_guess line; real move distribution." },
+    desc: "Headline results: per (model, condition) next-action prediction accuracy (macro) mean + 95% CI + per-user array; lucky_guess line; real move distribution." },
   { local: `${SRC}/experiments/condagree_multi/manifest.json`, name: "manifest.json", ct: "application/json",
     desc: "Experiment config: the 9 models with OpenRouter ids + reasoning efforts + concurrency, split file, taxonomy, judge model, n_per_user, n_points, git sha, timestamp." },
   { local: `${SRC}/experiments/condagree_multi/taxonomy.json`, name: "taxonomy.json", ct: "application/json",
@@ -22,13 +22,13 @@ const files = [
   { local: `${SRC}/experiments/condagree_multi/raw.jsonl`, name: "raw.jsonl", ct: "application/x-ndjson",
     desc: "Every trial (one JSON per line). Generation: {key, kind:'gen', point_id, slug, model, model_id, backend, effort, cond('distilled'|'generic'), text, ts, seed?}. Move label: {key:'lab:haiku:<hash>', move}. Join gens to labels via the 4-way classifier on (prev_agent, text)." },
   { local: `${SRC}/experiments/condagree_multi/cases.json`, name: "cases.json", ct: "application/json",
-    desc: "Case-study data for glm-5.2 / gemini-3.1-pro / osim-4b: per-developer CondAgree ±profile (delta), and every moment where the profile flipped the move (with the agent turn, real message+move, and both ±profile generations+moves)." },
+    desc: "Case-study data for glm-5.2 / gemini-3.1-pro / osim-4b: per-developer accuracy ±profile (delta), and every moment where the profile flipped the move (with the agent turn, real message+move, and both ±profile generations+moves)." },
   { local: `${SRC}/experiments/condagree_multi/category_recall.json`, name: "category_recall.json", ct: "application/json",
     desc: "Per-move agree-rate (recall) for all 9 models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap." },
   { local: `${SRC}/experiments/condagree_multi/verbosity.json`, name: "verbosity.json", ct: "application/json",
-    desc: "Average + median message length (words) per model, both conditions, vs the real developers; plus each model's CondAgree no-profile/with-profile. Drives the verbosity chart." },
+    desc: "Average + median message length (words) per model, both conditions, vs the real developers; plus each model's accuracy no-profile/with-profile. Drives the verbosity chart." },
   { local: `${SRC}/experiments/condagree_multi/ablation.json`, name: "ablation.json", ct: "application/json",
-    desc: "Contrastive-prefix ablation for glm-5.2 + gpt-5.5: CondAgree under no-profile vs the real persona vs a content-free terse style prefix, with spurious-inquiry rate, word count, and per-move recall." },
+    desc: "Contrastive-prefix ablation for glm-5.2 + gpt-5.5: accuracy under no-profile vs the real persona vs a content-free terse style prefix, with spurious-inquiry rate, word count, and per-move recall." },
 ];
 
 const uploaded = [];
@@ -40,9 +40,9 @@ for (const f of files) {
 }
 
 const index = {
-  dataset: "UserSimBench — CondAgree, 9 models, repo-disjoint SWE-chat test split",
+  dataset: "UserSimBench — accuracy, 9 models, repo-disjoint SWE-chat test split",
   generated_from: "website: github.com/AlienKevin/user-simulator (web/) · benchmark code: private repo AlienKevin/user.skill @ swesimbench (available on request)",
-  metric: "CondAgree = per-developer fraction of held-out moments where the simulator made the same 4-way move (approve/critical/directive/inquiry) the real developer made, averaged across 20 developers (macro, 95% CI). Chance baseline = lucky_guess (per-developer Sigma p^2), here 0.419.",
+  metric: "next-action prediction accuracy = per-developer fraction of held-out moments where the simulator made the same 4-way next action (approve/critical/directive/inquiry) the real developer took, averaged across 20 developers (macro, 95% CI). Chance baseline = lucky_guess (per-developer Sigma p^2), here 0.419.",
   taxonomy: "v2 4-way; single Haiku-4.5 judge (inter-judge kappa ~0.80).",
   split: "20-user test split, user- AND repo-disjoint from train/val.",
   models: ["deepseek-v3.1", "deepseek-v4-flash", "deepseek-v4-pro", "gpt-5.5", "claude-opus-4.8", "glm-5.2", "gemini-3.1-pro", "osim-4b", "osim-8b"],

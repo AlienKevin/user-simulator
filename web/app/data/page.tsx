@@ -3,7 +3,7 @@ import blobs from "./blobs.json";
 
 export const metadata: Metadata = {
   title: "Data: SWESimBench trial results",
-  description: "Download the raw experiment data behind the CondAgree results. Public, for readers and their agents.",
+  description: "Download the raw experiment data behind the accuracy results. Public, for readers and their agents.",
 };
 
 function human(b: number) {
@@ -29,7 +29,7 @@ export default function DataPage() {
           <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">download</div>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">Trial results: public, agent-readable</h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-700">
-            Every artifact behind the <a href="/" className="text-blue-700 underline-offset-2 hover:underline">CondAgree results</a> is
+            Every artifact behind the <a href="/" className="text-blue-700 underline-offset-2 hover:underline">accuracy results</a> is
             here: the 9-model × ±profile trials on a 20-developer, user- and repo-disjoint SWE-chat test split. Files are public on
             Vercel Blob. Point your agent at the machine-readable index, or download files directly below.
           </p>
@@ -41,7 +41,7 @@ export default function DataPage() {
           <div className="text-zinc-400"># machine-readable catalog (lists every file + schema):</div>
           <div className="break-all text-emerald-300">{index}</div>
           <pre className="mt-3 whitespace-pre-wrap text-zinc-300">{`curl -s ${index} | jq .            # the catalog
-curl -s ${files.find((f) => f.name === "summary.json")?.url}   # headline CondAgree results
+curl -s ${files.find((f) => f.name === "summary.json")?.url}   # headline accuracy results
 curl -s ${files.find((f) => f.name === "raw.jsonl")?.url} \\   # every generation + move label (NDJSON)
   | head -1 | jq .`}</pre>
         </section>
@@ -88,7 +88,7 @@ curl -s ${files.find((f) => f.name === "raw.jsonl")?.url} \\   # every generatio
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
             <h3 className="font-mono text-sm font-semibold text-zinc-900">summary.json: results</h3>
             <p className="mt-1.5 text-xs leading-relaxed text-zinc-600">
-              Per <span className="font-mono">model/condition</span>: CondAgree macro mean + 95% CI + the 20 per-developer values, plus
+              Per <span className="font-mono">model/condition</span>: accuracy macro mean + 95% CI + the 20 per-developer values, plus
               the <span className="font-mono">lucky_guess</span> line and the real move distribution. Models:{" "}
               <span className="text-zinc-700">{models.join(", ")}</span>.
             </p>

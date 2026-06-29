@@ -1,4 +1,4 @@
-// SWESimBench: explanatory walkthrough centered on CondAgree.
+// SWESimBench: explanatory walkthrough centered on next-action prediction accuracy.
 // Content: workflow-drafted + fact-checked against bench/profileopt/experiments/condagree_multi/
 // {summary,manifest,taxonomy,splits,cases}.json. Chart data = summary.json (9 models x ±profile).
 
@@ -122,7 +122,7 @@ function Leaderboard({ exclude = [] }: { exclude?: string[] }) {
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-5">
       <div className="mb-1 flex items-baseline justify-between">
-        <div className="text-xs font-semibold text-zinc-700">CondAgree: right move, right moment (higher is better)</div>
+        <div className="text-xs font-semibold text-zinc-700">accuracy: right move, right moment (higher is better)</div>
         <div className="text-[10px] text-zinc-400">sorted by with-profile</div>
       </div>
       <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–0.75</div>
@@ -150,13 +150,13 @@ function Leaderboard({ exclude = [] }: { exclude?: string[] }) {
     </div>
   );
 }
-// diverging "profile effect" bars: how much CondAgree moves when the profile is added
+// diverging "profile effect" bars: how much accuracy moves when the profile is added
 function ProfileEffect({ exclude = [] }: { exclude?: string[] }) {
   const rows = MODELS.filter((m) => !exclude.includes(m.id)).map((m) => ({ ...m, d: +(m.wp.ca - m.np.ca).toFixed(3) })).sort((a, b) => b.d - a.d);
   const MAX = 0.1;
   return (
     <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
-      <div className="mb-1 text-xs font-semibold text-zinc-700">the profile effect: change in CondAgree when the developer's profile is added</div>
+      <div className="mb-1 text-xs font-semibold text-zinc-700">the profile effect: change in accuracy when the developer's profile is added</div>
       <div className="mb-4 text-[11px] text-zinc-400">center = no effect · bar to the right = profile helps · bar to the left = profile hurts</div>
       {rows.map((m) => {
         const pos = m.d >= 0;
@@ -286,7 +286,7 @@ function Baseline({ exclude = [] }: { exclude?: string[] }) {
   const MAX = 0.75;
   return (
     <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
-      <div className="mb-1 text-xs font-semibold text-zinc-700">how good a simulator is each model with no profile? (no-profile CondAgree, ranked)</div>
+      <div className="mb-1 text-xs font-semibold text-zinc-700">how good a simulator is each model with no profile? (no-profile accuracy, ranked)</div>
       <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–{MAX}</div>
       {rows.map((m) => {
         const color = m.kind === "specialized" ? "bg-violet-400" : "bg-indigo-400";
@@ -318,7 +318,7 @@ function Ablation() {
   return (
     <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
       <div className="mb-1 text-xs font-semibold text-zinc-700">does a content-free “be terse, don’t ask questions” prefix reproduce the gain?</div>
-      <div className="mb-4 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · CondAgree macro · three prompts per model</div>
+      <div className="mb-4 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · accuracy macro · three prompts per model</div>
       {ABL.map((r) => (
         <div key={r.id} className="mb-4">
           <div className="mb-0.5 font-mono text-xs font-semibold text-zinc-900">{r.label}</div>
@@ -455,7 +455,7 @@ function MetricVisual() {
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-600">
           {MOVE_MIX.map((m) => <span key={m.move} className="inline-flex items-center gap-1"><span className={`inline-block size-2 rounded-sm ${m.color}`} />{m.move} <Mono className="text-zinc-500">{m.pct}%</Mono></span>)}
         </div>
-        <div className="mt-2 text-[11px] text-zinc-400">CondAgree = HITs ÷ moments, per developer, averaged over 20 · lucky-guess line = Σp² of the mix = <Mono className="text-zinc-600">0.419</Mono></div>
+        <div className="mt-2 text-[11px] text-zinc-400">accuracy = HITs ÷ moments, per developer, averaged over 20 · lucky-guess line = Σp² of the mix = <Mono className="text-zinc-600">0.419</Mono></div>
       </div>
     </div>
   );
@@ -580,10 +580,10 @@ const SECTIONS = [
       "A developer can say “fix the null check” or “this crashes on empty input, handle it” and mean roughly the same thing: stop, something is wrong, change course. Grading the exact words punishes a simulator for picking a different but valid phrasing, and at the single-message level wording saturates: too many surface forms map to the same intent for the words to discriminate. So we grade the move: the speech-act behind the message.",
       "We started with a 7-way taxonomy (new_work, refine_redirect, pushback, bug_report, approve_proceed, question, other), but two pairs were inherently confusable: new_work vs refine_redirect both just tell the agent what to do next; pushback vs bug_report both assert a fault. Even strong judges disagreed on which side each message fell. Collapsing those pairs into directive and critical erases the lines nobody could draw reliably, and a fault-first rule settles the rest. That change raised cross-family inter-judge agreement (Cohen's κ across Haiku-4.5, Opus-4.8, and GPT-5) from 0.681 to 0.805, high enough that a single cheap judge (Haiku-4.5) can label everything, with no multi-judge voting.",
     ], visual: <MovesTable /> },
-  { id: "metric", n: "04", title: "the metric", dek: "CondAgree: did the simulator make the right move, at the right moment, scored against chance.",
+  { id: "metric", n: "04", title: "the metric", dek: "Next-action prediction accuracy: did the simulator make the right move, at the right moment, scored against chance.",
     paragraphs: [
-      "CondAgree means “right move, right moment.” At each held-out moment we ask one thing: did the simulator's 4-way move match the move the real developer actually made there. For a single developer, CondAgree is the fraction of their moments that match; the headline number averages those per-developer fractions across all 20 test developers (a macro, so a chatty developer doesn't outweigh a quiet one), with a 95% CI (t, n=20).",
-      "The key word is conditional. CondAgree scores whether you made the right move here, given the conversation so far, not whether your overall mix of moves looks plausible. A simulator that emits a realistic blend of approvals and directives, but fires them at the wrong moments, scores poorly. It has to react to the situation in front of it, turn by turn.",
+      "Next-action prediction accuracy means “right move, right moment.” At each held-out moment we ask one thing: did the simulator's 4-way move match the move the real developer actually made there. For a single developer, accuracy is the fraction of their moments that match; the headline number averages those per-developer fractions across all 20 test developers (a macro, so a chatty developer doesn't outweigh a quiet one), with a 95% CI (t, n=20).",
+      "The key word is next-action: accuracy scores whether you made the right move here, given the conversation so far, not whether your overall mix of moves looks plausible. A simulator that emits a realistic blend of approvals and directives, but fires them at the wrong moments, scores poorly. It has to react to the situation in front of it, turn by turn.",
       "To know whether a score is real skill, compare it to the lucky-guess line: a simulator that ignores the conversation and just samples from a developer's own typical move-mix will still, by chance, land on the real move sometimes. The expected hit rate is the collision probability (Σp²) of that mix, averaged across developers. Here that comes to 0.419. It's high because these developers are directive-heavy, so even blind guessing matches often. Beating 0.419 means the simulator is reading the moment, not parroting habits.",
     ], visual: <MetricVisual /> },
 ];
@@ -606,13 +606,13 @@ export default function Page() {
       <main className="mx-auto max-w-3xl px-6 pb-20">
         {/* HERO */}
         <div className="py-12">
-          <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">one metric: CondAgree · 9 simulators</div>
+          <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">one metric: next-action prediction accuracy · 9 simulators</div>
           <h2 className="mt-2 text-3xl font-semibold leading-tight tracking-tight text-zinc-900">
             SWESimBench: how well can a model simulate a software engineer using a coding agent?
           </h2>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-700">
             A <span className="font-semibold text-zinc-900">user simulator</span> stands in for the human developer so we can stress-test
-            coding agents without a human in the loop. We grade one thing, <span className="font-semibold">CondAgree</span>: at each real
+            coding agents without a human in the loop. We grade one thing, <span className="font-semibold">next-action prediction accuracy</span> (accuracy for short): at each real
             moment in a recorded session, did the simulator make the <em>same move</em> the developer made next? We freeze nine simulators
             and score all 480 moments twice, with and without a profile of the developer, on a leak-free, user- and repo-disjoint split.
             The leaderboard is below; the rest of the page walks the split, eval, move taxonomy, metric, and a case study of <em>why</em> a
@@ -639,7 +639,7 @@ export default function Page() {
               </li>
               <li>
                 <span className="font-semibold text-zinc-900">Reasoning effort is not a lever.</span> Doubling DeepSeek-V4-Pro's reasoning
-                budget from low to max moved CondAgree within noise (+0.017 with the profile, +0.001 without); the task rewards reading the
+                budget from low to max moved accuracy within noise (+0.017 with the profile, +0.001 without); the task rewards reading the
                 situation, not deliberation.
               </li>
               <li>
@@ -673,7 +673,7 @@ export default function Page() {
           {/* RESULTS: the profile effect */}
           <Section n="05" id="results" title="the results" dek="profile helps the small simulators, but does little for the strongest general models, except for GLM-5.2.">
             <p>
-              Start with the baseline: how good is each model as a user-simulator with no profile at all? Ranked by no-profile CondAgree,
+              Start with the baseline: how good is each model as a user-simulator with no profile at all? Ranked by no-profile accuracy,
               GPT-5.5 and Gemini-3.1-Pro lead (around 0.52 to 0.55) and every general model clears the 0.419 chance line; the small
               OSim simulators trail, with OSim-4B the only one below it. Note where GLM-5.2 sits: mid-pack at 0.46, one of the weaker general
               simulators out of the box. Hold that thought.
@@ -683,7 +683,7 @@ export default function Page() {
               Before the profile question, one lever that turns out <em>not</em> to matter for this task: reasoning effort. Each general model
               runs at a fixed effort (the bracket after its name), so to isolate that lever we re-ran DeepSeek-V4-Pro at maximum effort with the
               prompt, seeds, and judge held fixed, changing nothing but the reasoning budget. Roughly doubling its hidden reasoning (about 230 to
-              410 tokens per reply) shifted CondAgree by just <span className="font-semibold text-zinc-700">+0.017 with the profile (0.509 to
+              410 tokens per reply) shifted accuracy by just <span className="font-semibold text-zinc-700">+0.017 with the profile (0.509 to
               0.526)</span> and <span className="font-semibold text-zinc-700">+0.001 without (0.486 to 0.487)</span>, both well inside the ±0.08
               CI. Predicting a developer's next move turns on reading the conversation and persona, not on deliberation, so the cheaper
               low-effort setting (used by the other DeepSeek models) scores the same within noise, and a max-effort reply was if anything a touch
@@ -691,7 +691,7 @@ export default function Page() {
             </p>
             <p>
               The rest of this section asks the sharper question: what does adding the developer's profile change? The chart below plots each
-              model's profile effect, the change in CondAgree when the developer's profile is added. A profile clearly
+              model's profile effect, the change in accuracy when the developer's profile is added. A profile clearly
               helps the OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, which lifts it from
               below the lucky-guess line to above; osim-8b +0.049) and, most of all, <span className="font-semibold text-teal-700">GLM-5.2
               (+0.099)</span>, which vaults it from mid-pack to the top of the leaderboard. For the strongest general models it does nothing or
@@ -762,7 +762,7 @@ export default function Page() {
         </div>
 
         <footer className="mt-12 border-t border-zinc-200 pt-6 text-xs text-zinc-400">
-          SWESimBench · CondAgree on real{" "}
+          SWESimBench · accuracy on real{" "}
           <a href="https://huggingface.co/datasets/SALT-NLP/SWE-chat" className="hover:text-zinc-700">SWE-chat</a> sessions ·
           <a href="/data" className="hover:text-zinc-700"> download the data</a> ·
           built on <a href="https://github.com/cooperbench/user.skill" className="hover:text-zinc-700">cooperbench/user.skill</a>.
