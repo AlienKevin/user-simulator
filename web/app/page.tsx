@@ -590,7 +590,7 @@ const SECTIONS = [
 
 /* ------------------------------- page --------------------------------- */
 export default function Page() {
-  const nav = [["leaderboard", "leaderboard"], ["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["the results", "results"], ["case study", "case-study"], ["the ablation", "ablation"]];
+  const nav = [["leaderboard", "leaderboard"], ["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["the results", "results"], ["case study", "case-study"], ["the ablation", "ablation"], ["the data", "data"]];
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
@@ -616,6 +616,10 @@ export default function Page() {
             moment, did the simulator make the <em>same move</em> the developer made? The leaderboard is right below. Then this page walks
             the pipeline behind it: the leak-free split, the eval, the move taxonomy, the metric, and finally what a profile actually does,
             a case study of <em>why</em> it helps some simulators and hurts others.
+          </p>
+          <p className="mt-4 text-[13px] text-zinc-500">
+            Every generation, label, and split is public.{" "}
+            <a href="/data" className="font-semibold text-blue-700 underline-offset-2 hover:underline">Download the full data →</a>
           </p>
           <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
             {nav.map(([t, h]) => <a key={h} href={`#${h}`} className="font-mono hover:text-zinc-900">{t}</a>)}
@@ -693,6 +697,25 @@ export default function Page() {
               that were already accurate from the conversation alone, GPT-5.5 and Gemini-3.1-Pro, have nothing to fix, and any prefix, persona
               or generic, only gets in their way.
             </p>
+          </Section>
+
+          <Section n="08" id="data" title="the data: all of it is public">
+            <p>
+              Every number and chart on this page is reproducible from public trial data. Nine files cover the whole pipeline: the{" "}
+              <Mono>summary</Mono> of results and the experiment <Mono>manifest</Mono>; the user- and repo-disjoint <Mono>splits</Mono> and the
+              4-way <Mono>taxonomy</Mono> with its judge prompt; the 480 frozen <Mono>points</Mono> and the <Mono>raw</Mono> log of all 9,600+
+              generations with every move label; and the <Mono>category</Mono>, <Mono>verbosity</Mono>, <Mono>cases</Mono>, and{" "}
+              <Mono>ablation</Mono> breakdowns behind each chart.
+            </p>
+            <div className="mt-2 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs leading-relaxed text-zinc-600">
+                <div className="font-semibold text-zinc-900">Download any file, or point an agent at the catalog.</div>
+                <div className="mt-0.5">A machine-readable <Mono>index.json</Mono> lists every file with its schema and a direct URL.</div>
+              </div>
+              <a href="/data" className="shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-zinc-700">
+                Open the data page →
+              </a>
+            </div>
           </Section>
         </div>
 
