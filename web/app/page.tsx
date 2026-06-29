@@ -272,6 +272,39 @@ function Verbosity({ exclude = [] }: { exclude?: string[] }) {
   );
 }
 
+// no-profile baseline: how good is each model as a simulator before any profile is added
+function Baseline({ exclude = [] }: { exclude?: string[] }) {
+  const rows = MODELS.filter((m) => !exclude.includes(m.id)).slice().sort((a, b) => b.np.ca - a.np.ca);
+  const MAX = 0.75;
+  return (
+    <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
+      <div className="mb-1 text-xs font-semibold text-zinc-700">how good a simulator is each model with no profile? (no-profile CondAgree, ranked)</div>
+      <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–{MAX}</div>
+      {rows.map((m) => {
+        const color = m.kind === "specialized" ? "bg-violet-400" : "bg-indigo-400";
+        const lo = Math.max(0, m.np.ca - m.np.ci), hi = Math.min(MAX, m.np.ca + m.np.ci);
+        return (
+          <div key={m.id} className="flex items-center gap-2 py-0.5 text-xs">
+            <div className="w-32 shrink-0 text-right"><span className="font-mono text-[11px] font-semibold text-zinc-900">{m.label}</span> <span className="text-[9px] text-zinc-400">{m.note}</span></div>
+            <div className="relative h-5 flex-1 rounded bg-zinc-100">
+              <div className="absolute bottom-[-3px] top-[-3px] border-l-2 border-dashed border-zinc-500/80" style={{ left: `${(LUCKY / MAX) * 100}%` }} />
+              <div className={`h-full rounded ${color}`} style={{ width: `${(m.np.ca / MAX) * 100}%` }} />
+              <div className="absolute top-1/2 h-[1.5px] -translate-y-1/2 bg-zinc-700/60" style={{ left: `${(lo / MAX) * 100}%`, width: `${((hi - lo) / MAX) * 100}%` }} />
+            </div>
+            <div className="w-12 shrink-0"><Mono className={m.np.ca > LUCKY ? "text-emerald-700" : "text-amber-700"}>{m.np.ca.toFixed(3)}</Mono></div>
+          </div>
+        );
+      })}
+      <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
+        <span className="inline-block size-2 rounded-sm bg-indigo-400 align-middle" /> general models ·
+        <span className="ml-1 inline-block size-2 rounded-sm bg-violet-400 align-middle" /> purpose-built OSim. Before any profile, the general
+        frontier models are the better simulators and the small OSim models trail; <span className="text-amber-700">OSim-4B</span> is the only one
+        below the chance line. (CIs overlap, so the top of the ranking is a cluster, not a clean winner.)
+      </p>
+    </div>
+  );
+}
+
 /* ----------------------------- visuals -------------------------------- */
 function Box({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-[11px] leading-snug text-zinc-700 ${className}`}>{children}</div>;
@@ -571,8 +604,15 @@ export default function Page() {
           {/* RESULTS: the profile effect */}
           <Section n="05" id="results" title="the results" dek="profile helps the small purpose-built simulators, but does little for the strongest general models, except for GLM-5.2.">
             <p>
-              The leaderboard up top ranks every simulator. This section asks the sharper question: what does the profile actually do? The
-              chart below plots each model's profile effect, the change in CondAgree when the developer's profile is added. A profile clearly
+              Start with the baseline: how good is each model as a user-simulator with no profile at all? Ranked by no-profile CondAgree, the
+              general frontier models lead, with GLM-5.2 and GPT-5.5 highest (around 0.55 to 0.58), and every general model clears the 0.419
+              chance line. The small purpose-built OSim simulators trail, and OSim-4B is the only model below the line. Raw capability already
+              buys a lot.
+            </p>
+            <Baseline exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <p>
+              The rest of this section asks the sharper question: what does adding the developer's profile change? The chart below plots each
+              model's profile effect, the change in CondAgree when the developer's profile is added. A profile clearly
               helps the purpose-built OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, which lifts it from
               below the lucky-guess line to above; osim-8b +0.049) and <span className="font-semibold text-teal-700">GLM-5.2 (+0.084, the
               largest gain of all)</span>. For the strongest general models it does little to nothing: gpt-5.5 about zero, gemini-3.1-pro
