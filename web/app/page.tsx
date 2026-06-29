@@ -15,7 +15,7 @@ const MODELS: M[] = [
   { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", note: "reasoning", kind: "general", np: { ca: 0.486, ci: 0.065 }, wp: { ca: 0.509, ci: 0.081 } },
   { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", note: "reasoning", kind: "general", hidden: true, np: { ca: 0.496, ci: 0.075 }, wp: { ca: 0.507, ci: 0.098 } },
   { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", note: "reasoning · high", kind: "general", np: { ca: 0.511, ci: 0.127 }, wp: { ca: 0.492, ci: 0.112 } },
-  { id: "deepseek-v3.1", label: "DeepSeek-V3.1", note: "frontier", kind: "general", hidden: true, np: { ca: 0.512, ci: 0.075 }, wp: { ca: 0.488, ci: 0.093 } },
+  { id: "deepseek-v3.1", label: "DeepSeek-V3.1", note: "reasoning", kind: "general", hidden: true, np: { ca: 0.512, ci: 0.075 }, wp: { ca: 0.488, ci: 0.093 } },
   { id: "osim-8b", label: "OSim-8B", note: "purpose-built simulator", kind: "specialized", np: { ca: 0.427, ci: 0.064 }, wp: { ca: 0.476, ci: 0.072 } },
   { id: "claude-opus-4.8", label: "Claude-Opus-4.8", note: "reasoning · xhigh", kind: "general", np: { ca: 0.457, ci: 0.107 }, wp: { ca: 0.465, ci: 0.143 } },
   { id: "osim-4b", label: "OSim-4B", note: "purpose-built simulator", kind: "specialized", np: { ca: 0.388, ci: 0.064 }, wp: { ca: 0.461, ci: 0.073 } },
@@ -109,24 +109,7 @@ export default function Page() {
           </div>
           <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–0.75</div>
 
-          {/* MODEL SELECTOR */}
-          <div className="mb-4 flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-[10px] uppercase tracking-wider text-zinc-400">show</span>
-            {MODELS.map((m) => {
-              const on = shown.has(m.id);
-              return (
-                <button key={m.id} onClick={() => toggle(m.id)} aria-pressed={on}
-                  className={`rounded-full border px-2 py-0.5 font-mono text-[10px] transition ${on ? (m.kind === "specialized" ? "border-violet-600 bg-violet-600 text-white" : "border-indigo-600 bg-indigo-600 text-white") : "border-zinc-200 bg-white text-zinc-400 hover:border-zinc-400"}`}>
-                  {m.label}
-                </button>
-              );
-            })}
-            <button onClick={() => setAll(!allOn)} className="ml-1 text-[10px] text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline">
-              {allOn ? "reset" : "show all 9"}
-            </button>
-          </div>
-
-          {visible.length === 0 && <div className="py-4 text-center text-xs text-zinc-400">No models selected — pick some above.</div>}
+          {visible.length === 0 && <div className="py-4 text-center text-xs text-zinc-400">No models selected — pick some below.</div>}
           {visible.map((m) => {
             const d = delta(m);
             const bar = m.kind === "specialized" ? "bg-violet-500" : "bg-indigo-500";
@@ -152,6 +135,23 @@ export default function Page() {
             biggest profile gains go to GLM-5.2 (+{delta(glm)}) and the OSim models; the strong general models are flat or slightly
             negative. At n=20 the CIs are ±0.06–0.15, so single-model lifts are suggestive, not definitive.
           </p>
+
+          {/* MODEL SELECTOR — pick which simulators to chart */}
+          <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-zinc-100 pt-3">
+            <span className="mr-1 text-[10px] uppercase tracking-wider text-zinc-400">show</span>
+            {MODELS.map((m) => {
+              const on = shown.has(m.id);
+              return (
+                <button key={m.id} onClick={() => toggle(m.id)} aria-pressed={on}
+                  className={`rounded-full border px-2 py-0.5 font-mono text-[10px] transition ${on ? (m.kind === "specialized" ? "border-violet-600 bg-violet-600 text-white" : "border-indigo-600 bg-indigo-600 text-white") : "border-zinc-200 bg-white text-zinc-400 hover:border-zinc-400"}`}>
+                  {m.label}
+                </button>
+              );
+            })}
+            <button onClick={() => setAll(!allOn)} className="ml-1 text-[10px] text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline">
+              {allOn ? "reset" : "show all 9"}
+            </button>
+          </div>
         </section>
 
         {/* EXPLAINERS */}
