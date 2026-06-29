@@ -1,6 +1,6 @@
 // SWESimBench: explanatory walkthrough centered on next-action prediction accuracy.
 // Content: workflow-drafted + fact-checked against bench/profileopt/experiments/condagree_multi/
-// {summary,manifest,taxonomy,splits,cases}.json. Chart data = summary.json (9 models x ±profile).
+// {summary,manifest,taxonomy,splits,cases}.json. Chart data = summary.json (9 models x ±profile; 7 shown on the leaderboard, 2 deepseek variants hidden).
 
 import type { ReactNode } from "react";
 
@@ -387,8 +387,8 @@ function EvalVisual() {
         <Box className="text-center text-zinc-600">frozen simulator → <span className="text-zinc-800">developer's next message</span> <span className="text-zinc-400">(1 trial, no resampling)</span></Box>
       </div>
       <div className="mt-3 border-t border-zinc-200 pt-2 text-center text-[11px] text-zinc-500">
-        <Mono className="text-zinc-700">20 developers × ≤30 moments = 480</Mono> × <Mono className="text-zinc-700">2 conditions</Mono> × <Mono className="text-zinc-700">9 simulators</Mono> = <Mono className="font-semibold text-zinc-900">8,640 generations</Mono>
-        <div className="mt-1 text-[10px] text-zinc-400">7 general via OpenRouter · 2 (osim-4b/8b) via Modal</div>
+        <Mono className="text-zinc-700">20 developers × ≤30 moments = 480</Mono> × <Mono className="text-zinc-700">2 conditions</Mono> × <Mono className="text-zinc-700">7 simulators</Mono> = <Mono className="font-semibold text-zinc-900">6,720 generations</Mono>
+        <div className="mt-1 text-[10px] text-zinc-400">5 general via OpenRouter · 2 (osim-4b/8b) via Modal</div>
       </div>
     </div>
   );
@@ -573,7 +573,7 @@ const SECTIONS = [
   { id: "eval", n: "02", title: "the eval", dek: "20 test developers, 480 held-out moments, each simulator writes the developer's next message, with and without a profile.",
     paragraphs: [
       "We run the eval on the 20 test developers. For each one we pick up to 30 held-out moments (points in a real session where the developer actually spoke next) for 480 prediction points total. At each moment the simulator sees the real conversation up to that point: the coding agent's latest turn plus the history. Its job is to write what the developer says next. It never sees the message it is scored against.",
-      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 9 simulators and have each generate all 480 moments in both conditions: 480 × 2 × 9 = 8,640 generations, one trial per cell, no resampling. Seven are general models served via OpenRouter at fixed reasoning efforts; two are small simulators, osim-4b and osim-8b, served via Modal. The next sections cover how we grade what comes back.",
+      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 7 simulators and have each generate all 480 moments in both conditions: 480 × 2 × 7 = 6,720 generations, one trial per cell, no resampling. Five are general models served via OpenRouter at fixed reasoning efforts; two are small simulators, osim-4b and osim-8b, served via Modal. (Two further DeepSeek variants were run but kept off the leaderboard; they stay in the downloadable data.) The next sections cover how we grade what comes back.",
     ], visual: <EvalVisual /> },
   { id: "moves", n: "03", title: "the moves", dek: "we grade the speech-act, not the wording, just four moves under a fault-first rule.",
     paragraphs: [
@@ -606,14 +606,14 @@ export default function Page() {
       <main className="mx-auto max-w-3xl px-6 pb-20">
         {/* HERO */}
         <div className="py-12">
-          <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">one metric: next-action prediction accuracy · 9 simulators</div>
+          <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">one metric: next-action prediction accuracy · 7 simulators</div>
           <h2 className="mt-2 text-3xl font-semibold leading-tight tracking-tight text-zinc-900">
             SWESimBench: how well can a model simulate a software engineer using a coding agent?
           </h2>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-700">
             A <span className="font-semibold text-zinc-900">user simulator</span> stands in for the human developer so we can stress-test
             coding agents without a human in the loop. We grade one thing, <span className="font-semibold">next-action prediction accuracy</span> (accuracy for short): at each real
-            moment in a recorded session, did the simulator make the <em>same move</em> the developer made next? We freeze nine simulators
+            moment in a recorded session, did the simulator make the <em>same move</em> the developer made next? We freeze seven simulators
             and score all 480 moments twice, with and without a profile of the developer, on a leak-free, user- and repo-disjoint split.
             The leaderboard is below; the rest of the page walks the split, eval, move taxonomy, metric, and a case study of <em>why</em> a
             profile helps some simulators and hurts others.
@@ -644,7 +644,7 @@ export default function Page() {
               </li>
               <li>
                 <span className="font-semibold text-zinc-900">Leak-free and fully public.</span> A user- and repo-disjoint test split, a single
-                Haiku judge over a 4-way move taxonomy, 9 simulators across 480 real moments in 2 conditions; every generation, label, and
+                Haiku judge over a 4-way move taxonomy, 7 simulators across 480 real moments in 2 conditions; every generation, label, and
                 split is downloadable.
               </li>
             </ul>

@@ -30,7 +30,7 @@ export default function DataPage() {
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">Trial results: public, agent-readable</h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-700">
             Every artifact behind the <a href="/" className="text-blue-700 underline-offset-2 hover:underline">accuracy results</a> is
-            here: the 9-model × ±profile trials on a 20-developer, user- and repo-disjoint SWE-chat test split. Files are public on
+            here: the 7 leaderboard simulators × ±profile on a 20-developer, user- and repo-disjoint SWE-chat test split (the raw files also include 2 hidden DeepSeek variants, 9 model conditions in total). Files are public on
             Vercel Blob. Point your agent at the machine-readable index, or download files directly below.
           </p>
         </div>

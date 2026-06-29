@@ -40,7 +40,7 @@ for (const f of files) {
 }
 
 const index = {
-  dataset: "UserSimBench — accuracy, 9 models, repo-disjoint SWE-chat test split",
+  dataset: "SWESimBench — next-action prediction accuracy; 7 leaderboard simulators (raw includes 2 hidden DeepSeek variants, 9 model conditions), repo-disjoint SWE-chat test split",
   generated_from: "website: github.com/AlienKevin/user-simulator (web/) · benchmark code: private repo AlienKevin/user.skill @ swesimbench (available on request)",
   metric: "next-action prediction accuracy = per-developer fraction of held-out moments where the simulator made the same 4-way next action (approve/critical/directive/inquiry) the real developer took, averaged across 20 developers (macro, 95% CI). Chance baseline = lucky_guess (per-developer Sigma p^2), here 0.419.",
   taxonomy: "v2 4-way; single Haiku-4.5 judge (inter-judge kappa ~0.80).",
