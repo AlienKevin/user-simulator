@@ -109,8 +109,8 @@ function CABar({ label, value, ci, color, max = 0.75 }: { label: string; value: 
     </div>
   );
 }
-function Leaderboard() {
-  const rows = [...MODELS].sort((a, b) => b.wp.ca - a.wp.ca);
+function Leaderboard({ exclude = [] }: { exclude?: string[] }) {
+  const rows = MODELS.filter((m) => !exclude.includes(m.id)).sort((a, b) => b.wp.ca - a.wp.ca);
   const delta = (m: M) => +(m.wp.ca - m.np.ca).toFixed(3);
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-5">
@@ -558,7 +558,7 @@ export default function Page() {
 
         <div className="space-y-10">
           <Section id="leaderboard" title="SWESimBench Leaderboard">
-            <Leaderboard />
+            <Leaderboard exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
           </Section>
 
           {SECTIONS.map((s) => (
