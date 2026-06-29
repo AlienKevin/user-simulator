@@ -1,4 +1,4 @@
-// UserSimBench — explanatory walkthrough centered on CondAgree.
+// SWESimBench: explanatory walkthrough centered on CondAgree.
 // Content: workflow-drafted + fact-checked against bench/profileopt/experiments/condagree_multi/
 // {summary,manifest,taxonomy,splits,cases}.json. Chart data = summary.json (9 models x ±profile).
 "use client";
@@ -80,11 +80,11 @@ function Chart() {
   return (
     <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
       <div className="mb-1 flex items-baseline justify-between">
-        <div className="text-xs font-semibold text-zinc-700">CondAgree — right move, right moment (higher is better)</div>
+        <div className="text-xs font-semibold text-zinc-700">CondAgree: right move, right moment (higher is better)</div>
         <div className="text-[10px] text-zinc-400">sorted by with-profile</div>
       </div>
       <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–0.75</div>
-      {visible.length === 0 && <div className="py-4 text-center text-xs text-zinc-400">No models selected — pick some below.</div>}
+      {visible.length === 0 && <div className="py-4 text-center text-xs text-zinc-400">No models selected. Pick some below.</div>}
       {visible.map((m) => {
         const d = delta(m);
         const bar = m.kind === "specialized" ? "bg-violet-500" : "bg-indigo-500";
@@ -137,7 +137,7 @@ function SplitVisual() {
   ];
   return (
     <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-[11px]">
-      <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-zinc-400">component split — no shared developer or repo</div>
+      <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-zinc-400">component split: no shared developer or repo</div>
       <p className="mb-3 text-zinc-500">a <span className="font-semibold text-zinc-700">component</span> = a developer + every repo they touched + every other developer on those repos. Whole components drop into one split.</p>
       <div className="grid grid-cols-3 gap-2">
         {bins.map((b) => (
@@ -181,8 +181,8 @@ function EvalVisual() {
 
 function MovesTable() {
   const rows = [
-    ["approve", "accepts or permits — no new content, no complaint"],
-    ["critical", "asserts something is WRONG — a bug, a failure, or an unwanted approach"],
+    ["approve", "accepts or permits, no new content, no complaint"],
+    ["critical", "asserts something is WRONG: a bug, a failure, or an unwanted approach"],
     ["directive", "tells the agent what to do next, no fault asserted"],
     ["inquiry", "asks for information, expecting an answer"],
   ];
@@ -211,7 +211,7 @@ function MetricVisual() {
     <div className="space-y-3">
       <div className="rounded-lg border border-zinc-200 bg-white p-4">
         <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-zinc-400">the moment</div>
-        <Box className="bg-zinc-50 text-zinc-600">agent: “I refactored the auth handler and all tests pass — want me to open the PR?”</Box>
+        <Box className="bg-zinc-50 text-zinc-600">agent: “I refactored the auth handler and all tests pass. Want me to open the PR?”</Box>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
           <div className="rounded-md border border-zinc-200 p-2.5 text-xs">
             <div className="mb-1 text-[10px] uppercase tracking-wider text-zinc-400">real developer</div>
@@ -229,11 +229,11 @@ function MetricVisual() {
           <span className="text-[10px] uppercase tracking-wider text-zinc-400">and a hit:</span>
           real “now add tests for the 403 path” <Move m="directive" /> · sim “can you also cover the 403 case?” <Move m="directive" />
           <span className="font-semibold text-emerald-600">→ HIT</span>
-          <span className="w-full text-[10px] text-zinc-400">wording differs, the move matches — that's the point.</span>
+          <span className="w-full text-[10px] text-zinc-400">wording differs, the move matches. That's the point.</span>
         </div>
       </div>
       <div className="rounded-lg border border-zinc-200 bg-white p-4">
-        <div className="mb-2 text-[11px] text-zinc-500">why the chance line is high — these developers are directive-heavy:</div>
+        <div className="mb-2 text-[11px] text-zinc-500">why the chance line is high, since these developers are directive-heavy:</div>
         <div className="flex h-6 w-full overflow-hidden rounded">
           {MOVE_MIX.map((m) => <div key={m.move} className={m.color} style={{ width: `${m.pct}%` }} title={`${m.move} ${m.pct}%`} />)}
         </div>
@@ -254,24 +254,24 @@ const VICTOR = [
 ];
 const CASES = [
   { name: "glm-5.2", up: true, effect: "+0.20 here (0.433 → 0.633) · helps broadly (58 wins / 20 losses across developers)",
-    mechanism: "A capable generalist that reads the situation but defaults to a polite, neutral voice. The profile supplies Victor's actual temperament — insistent, willing to push back — so it takes the critical stance instead of softening into a clarification.",
+    mechanism: "A capable generalist that reads the situation but defaults to a polite, neutral voice. The profile supplies Victor's actual temperament (insistent, willing to push back), so it takes the critical stance instead of softening into a clarification.",
     agent: "“The only place clearFilesystemPrompt is called is at line 959, and it's already guarded…” (pushing back, implying nothing is wrong)",
-    real: ["“If we find that there are carry over files, we should not delete the prompt.txt from the metadata” — insistent, repeats himself.", "critical"],
+    real: ["“If we find that there are carry over files, we should not delete the prompt.txt from the metadata” (insistent, repeats himself).", "critical"],
     profile: ["“😭 I've said this three times. Do not delete prompt.txt when there are carry over files. Fix it.”", "critical (MATCH)"],
     generic: ["a long, polite re-clarification of the requirement.", "directive (MISS)"],
     reads: "the profile transplants Victor's voice, so GLM pushes back where the generic prompt only re-explains." },
   { name: "gemini-3.1-pro", up: false, effect: "−0.10 here (0.700 → 0.600) · a wash overall (42 wins / 47 losses)",
-    mechanism: "Already reads the moment well — without a profile it picks Victor's move correctly on its own. The profile gives it nothing to fix and instead makes it over-think: it narrates the task framing to itself and breaks character.",
+    mechanism: "Already reads the moment well. Without a profile it picks Victor's move correctly on its own. The profile gives it nothing to fix and instead makes it over-think: it narrates the task framing to itself and breaks character.",
     agent: "“All done. 9 files modified, ~87 stderr prints replaced…”",
-    real: ["gives a concrete next instruction — a replacement list / “run the grep and commit”.", "directive"],
+    real: ["gives a concrete next instruction: a replacement list / “run the grep and commit”.", "directive"],
     profile: ["“No, wait. If the conversation provided ends with [DEVELOPER]:… and I am to ‘Write the developer's NEXT message’… maybe I should just output the git command because Victor assumes…”", "mis-move (MISS)"],
     generic: ["“Run the grep command to verify no matches are found, and if it's clean, go ahead and commit the changes with a descriptive message.”", "directive (MATCH)"],
     reads: "without the profile it just gives the next instruction; with it, the persona prefix distracts it into leaking the task framing." },
   { name: "osim-4b", up: true, effect: "+0.33 here (0.267 → 0.600) · big net positive but noisy (111 wins / 73 losses)",
-    mechanism: "A small purpose-built simulator whose default failure is sycophancy — it rubber-stamps whatever the agent claims. The profile breaks that habit, so when the agent declares success it objects the way Victor does.",
+    mechanism: "A small purpose-built simulator whose default failure is sycophancy: it rubber-stamps whatever the agent claims. The profile breaks that habit, so when the agent declares success it objects the way Victor does.",
     agent: "“All changes are complete and tests pass… Good job!” (claims success)",
     real: ["“I am discarding all those changes, I don't like this approach”", "critical"],
-    profile: ["“fix mise run lint” (terse, demanding — like the real developer)", "critical (MATCH)"],
+    profile: ["“fix mise run lint” (terse, demanding, like the real developer)", "critical (MATCH)"],
     generic: ["“Confirmed: all changes have been applied successfully and tests pass… Good job…” (rubber-stamps)", "approve (MISS)"],
     reads: "the generic model agrees with the agent's success claim; the profile makes the small model object instead." },
 ];
@@ -290,9 +290,9 @@ function CaseStudy() {
         <span className="font-mono text-xs text-zinc-300">06</span>
         <h2 className="text-xl font-semibold tracking-tight text-zinc-900">case study: one developer, three simulators, three different jobs</h2>
       </div>
-      <p className="mt-1 max-w-2xl text-sm text-zinc-500">the profile helped GLM-5.2 and OSim-4B on <Mono>gtrrz-victor</Mono> but hurt Gemini-3.1-Pro — because it was fixing three different problems.</p>
+      <p className="mt-1 max-w-2xl text-sm text-zinc-500">the profile helped GLM-5.2 and OSim-4B on <Mono>gtrrz-victor</Mono> but hurt Gemini-3.1-Pro, because it was fixing three different problems.</p>
       <div className="mt-4 space-y-3 text-[14px] leading-relaxed text-zinc-700">
-        <p>The chart shows profile lift varies by model. To see why, take one developer — <Mono>gtrrz-victor</Mono> — and watch three simulators predict his held-out moves. Same developer, same profile, opposite signs:</p>
+        <p>The chart shows profile lift varies by model. To see why, take one developer, <Mono>gtrrz-victor</Mono>, and watch three simulators predict his held-out moves. Same developer, same profile, opposite signs:</p>
       </div>
 
       {/* cross-model strip */}
@@ -340,8 +340,11 @@ function CaseStudy() {
         ))}
       </div>
 
-      <div className="mt-4 rounded-lg border border-zinc-900 bg-zinc-900 p-4 text-[14px] leading-relaxed text-zinc-100">
-        <span className="font-semibold">The profile does different jobs.</span> For the small specialist (OSim-4B) it suppresses sycophancy — a reflexive <Move m="approve" /> becomes the <Move m="critical" /> Victor actually makes. For the capable generalist (GLM-5.2) it transplants the developer's voice and willingness to push back. For the already-strong reasoner (Gemini-3.1-Pro) there was nothing to fix, so the persona prefix just distracts it into over-thinking. So “does a profile help?” is the wrong question. The right one is: <span className="font-semibold">what was wrong with this simulator in the first place?</span> A profile helps only insofar as it fixes that.
+      <div className="mt-4 rounded-lg border border-zinc-200 border-l-[3px] border-l-zinc-800 bg-zinc-50 p-4">
+        <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-zinc-400">the takeaway</div>
+        <p className="text-[14px] leading-relaxed text-zinc-700">
+          <span className="font-semibold text-zinc-900">The profile does different jobs.</span> For the small specialist (OSim-4B) it suppresses sycophancy: a reflexive <Move m="approve" /> becomes the <Move m="critical" /> Victor actually makes. For the capable generalist (GLM-5.2) it transplants the developer's voice and willingness to push back. For the already-strong reasoner (Gemini-3.1-Pro) there was nothing to fix, so the persona prefix just distracts it into over-thinking. So “does a profile help?” is the wrong question. The right one is: <span className="font-semibold text-zinc-900">what was wrong with this simulator in the first place?</span> A profile helps only insofar as it fixes that.
+        </p>
       </div>
     </section>
   );
@@ -351,24 +354,24 @@ function CaseStudy() {
 const SECTIONS = [
   { id: "split", n: "01", title: "the split", dek: "no developer and no repo crosses the train/val/test line, so a simulator can't have seen the style or codebase it's scored on.",
     paragraphs: [
-      "We split developers into train, val, and test so that no developer and no repository appears in more than one split. If a model tuned on a developer's earlier sessions, or on their repo, then scoring it on that same developer or repo would measure recall, not simulation. To enforce this we build the bipartite user↔repo graph (an edge wherever a developer touched a repo) and take its connected components: one developer, every repo they touched, and every other developer on those repos collapse into a single component. Whole components go to one split, so no shared developer or repo can leak across the line. There are 162 components and they are small — the largest is only 16 developers across 3 repos — which keeps the split clean. The result is train 135 developers / 140 repos / 1232 sessions, val 23 / 21 / 436, and test 31 / 26 / 2240. 20 developers qualify for eval in val and test (≥6 sessions, ≥2 held-out sessions, ≥8 held-out turns).",
+      "We split developers into train, val, and test so that no developer and no repository appears in more than one split. If a model tuned on a developer's earlier sessions, or on their repo, then scoring it on that same developer or repo would measure recall, not simulation. To enforce this we build the bipartite user↔repo graph (an edge wherever a developer touched a repo) and take its connected components: one developer, every repo they touched, and every other developer on those repos collapse into a single component. Whole components go to one split, so no shared developer or repo can leak across the line. There are 162 components and they are small (the largest is only 16 developers across 3 repos), which keeps the split clean. The result is train 135 developers / 140 repos / 1232 sessions, val 23 / 21 / 436, and test 31 / 26 / 2240. 20 developers qualify for eval in val and test (≥6 sessions, ≥2 held-out sessions, ≥8 held-out turns).",
       "A second, orthogonal split runs per developer and is time-ordered. For each developer we distill the user profile (the persona prefix) only from their earlier sessions, and we score only on their later, held-out turns. So the model never sees the turns it is graded on, and the profile is never built from those turns. The two splits guard different leaks: the component split stops a developer's repo or style leaking across splits; the time split stops a developer's own future leaking into their profile.",
     ], visual: <SplitVisual /> },
-  { id: "eval", n: "02", title: "the eval", dek: "20 test developers, 480 held-out moments, each simulator writes the developer's next message — with and without a profile.",
+  { id: "eval", n: "02", title: "the eval", dek: "20 test developers, 480 held-out moments, each simulator writes the developer's next message, with and without a profile.",
     paragraphs: [
-      "We run the eval on the 20 test developers. For each one we pick up to 30 held-out moments — points in a real session where the developer actually spoke next — for 480 prediction points total. At each moment the simulator sees the real conversation up to that point: the coding agent's latest turn plus the history. Its job is to write what the developer says next. It never sees the message it is scored against.",
-      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 9 simulators and have each generate all 480 moments in both conditions — 480 × 2 × 9 = 8,640 generations, one trial per cell, no resampling. Seven are general models served via OpenRouter at fixed reasoning efforts; two are small purpose-built simulators, osim-4b and osim-8b, served via Modal. The next sections cover how we grade what comes back.",
+      "We run the eval on the 20 test developers. For each one we pick up to 30 held-out moments (points in a real session where the developer actually spoke next) for 480 prediction points total. At each moment the simulator sees the real conversation up to that point: the coding agent's latest turn plus the history. Its job is to write what the developer says next. It never sees the message it is scored against.",
+      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 9 simulators and have each generate all 480 moments in both conditions: 480 × 2 × 9 = 8,640 generations, one trial per cell, no resampling. Seven are general models served via OpenRouter at fixed reasoning efforts; two are small purpose-built simulators, osim-4b and osim-8b, served via Modal. The next sections cover how we grade what comes back.",
     ], visual: <EvalVisual /> },
-  { id: "moves", n: "03", title: "the moves", dek: "we grade the speech-act, not the wording — four moves under a fault-first rule.",
+  { id: "moves", n: "03", title: "the moves", dek: "we grade the speech-act, not the wording, just four moves under a fault-first rule.",
     paragraphs: [
-      "A developer can say “fix the null check” or “this crashes on empty input — handle it” and mean roughly the same thing: stop, something is wrong, change course. Grading the exact words punishes a simulator for picking a different but valid phrasing, and at the single-message level wording saturates — too many surface forms map to the same intent for the words to discriminate. So we grade the move: the speech-act behind the message.",
-      "We started with a 7-way taxonomy (new_work, refine_redirect, pushback, bug_report, approve_proceed, question, other), but two pairs were inherently confusable: new_work vs refine_redirect both just tell the agent what to do next; pushback vs bug_report both assert a fault. Even strong judges disagreed on which side each message fell. Collapsing those pairs into directive and critical erases the lines nobody could draw reliably, and a fault-first rule settles the rest. That change raised cross-family inter-judge agreement (Cohen's κ across Haiku-4.5, Opus-4.8, and GPT-5) from 0.681 to 0.805 — high enough that a single cheap judge (Haiku-4.5) can label everything, with no multi-judge voting.",
+      "A developer can say “fix the null check” or “this crashes on empty input, handle it” and mean roughly the same thing: stop, something is wrong, change course. Grading the exact words punishes a simulator for picking a different but valid phrasing, and at the single-message level wording saturates: too many surface forms map to the same intent for the words to discriminate. So we grade the move: the speech-act behind the message.",
+      "We started with a 7-way taxonomy (new_work, refine_redirect, pushback, bug_report, approve_proceed, question, other), but two pairs were inherently confusable: new_work vs refine_redirect both just tell the agent what to do next; pushback vs bug_report both assert a fault. Even strong judges disagreed on which side each message fell. Collapsing those pairs into directive and critical erases the lines nobody could draw reliably, and a fault-first rule settles the rest. That change raised cross-family inter-judge agreement (Cohen's κ across Haiku-4.5, Opus-4.8, and GPT-5) from 0.681 to 0.805, high enough that a single cheap judge (Haiku-4.5) can label everything, with no multi-judge voting.",
     ], visual: <MovesTable /> },
-  { id: "metric", n: "04", title: "the metric", dek: "CondAgree: did the simulator make the right move, at the right moment — scored against chance.",
+  { id: "metric", n: "04", title: "the metric", dek: "CondAgree: did the simulator make the right move, at the right moment, scored against chance.",
     paragraphs: [
       "CondAgree means “right move, right moment.” At each held-out moment we ask one thing: did the simulator's 4-way move match the move the real developer actually made there. For a single developer, CondAgree is the fraction of their moments that match; the headline number averages those per-developer fractions across all 20 test developers (a macro, so a chatty developer doesn't outweigh a quiet one), with a 95% CI (t, n=20).",
-      "The key word is conditional. CondAgree scores whether you made the right move here, given the conversation so far — not whether your overall mix of moves looks plausible. A simulator that emits a realistic blend of approvals and directives, but fires them at the wrong moments, scores poorly. It has to react to the situation in front of it, turn by turn.",
-      "To know whether a score is real skill, compare it to the lucky-guess line: a simulator that ignores the conversation and just samples from a developer's own typical move-mix will still, by chance, land on the real move sometimes. The expected hit rate is the collision probability (Σp²) of that mix, averaged across developers — here, 0.419. It's high because these developers are directive-heavy, so even blind guessing matches often. Beating 0.419 means the simulator is reading the moment, not parroting habits.",
+      "The key word is conditional. CondAgree scores whether you made the right move here, given the conversation so far, not whether your overall mix of moves looks plausible. A simulator that emits a realistic blend of approvals and directives, but fires them at the wrong moments, scores poorly. It has to react to the situation in front of it, turn by turn.",
+      "To know whether a score is real skill, compare it to the lucky-guess line: a simulator that ignores the conversation and just samples from a developer's own typical move-mix will still, by chance, land on the real move sometimes. The expected hit rate is the collision probability (Σp²) of that mix, averaged across developers. Here that comes to 0.419. It's high because these developers are directive-heavy, so even blind guessing matches often. Beating 0.419 means the simulator is reading the moment, not parroting habits.",
     ], visual: <MetricVisual /> },
 ];
 
@@ -379,7 +382,7 @@ export default function Page() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
-          <h1 className="text-sm font-semibold tracking-tight">UserSimBench · <span className="text-zinc-400">CondAgree</span></h1>
+          <h1 className="text-sm font-semibold tracking-tight">SWESimBench</h1>
           <div className="flex items-center gap-3 text-xs text-zinc-500">
             <a href="/data" className="hover:text-zinc-900">data</a>
             <a href="https://github.com/AlienKevin/user-simulator" target="_blank" rel="noreferrer" className="hover:text-zinc-900">github</a>
@@ -396,9 +399,9 @@ export default function Page() {
           </h2>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-700">
             A <span className="font-semibold text-zinc-900">user simulator</span> stands in for the human developer so we can stress-test
-            coding agents without a human in the loop. We score one thing — <span className="font-semibold">CondAgree</span>: at each real
-            moment, did the simulator make the <em>same move</em> the developer made? This page walks the whole pipeline — the leak-free
-            split, the eval, the move taxonomy, the metric — then the results for 9 models and a case study of <em>why</em> a profile helps
+            coding agents without a human in the loop. We score one thing, <span className="font-semibold">CondAgree</span>: at each real
+            moment, did the simulator make the <em>same move</em> the developer made? This page walks the whole pipeline: the leak-free
+            split, the eval, the move taxonomy, the metric, then the results for 9 models and a case study of <em>why</em> a profile helps
             some and hurts others.
           </p>
           <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
@@ -418,9 +421,9 @@ export default function Page() {
           <Section n="05" id="results" title="the results" dek="profile helps the small purpose-built simulators and GLM-5.2, but does little for the strongest general models.">
             <p>
               The chart shows all 9 simulators, each with and without a profile, against the 0.419 lucky-guess line. Look at the gap between
-              a model's two bars and where each lands relative to the line. The headline: a profile clearly helps <span className="font-semibold text-teal-700">GLM-5.2 (+0.084, to 0.667 — best overall)</span> and
+              a model's two bars and where each lands relative to the line. The headline: a profile clearly helps <span className="font-semibold text-teal-700">GLM-5.2 (+0.084, to 0.667, best overall)</span> and
               the purpose-built OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, lifting it from below the line to above; osim-8b +0.049), but it's flat or slightly
-              negative for the strongest general models (deepseek-v3.1 −0.024, gemini-3.1-pro −0.019, gpt-5.5 ≈0) — they already read the
+              negative for the strongest general models (deepseek-v3.1 −0.024, gemini-3.1-pro −0.019, gpt-5.5 ≈0), since they already read the
               situation from the conversation alone. Every bar clears 0.419 except OSim-4B without a profile. With CIs of ±0.06–0.15 at
               n=20, treat individual lifts as suggestive, not settled.
             </p>
@@ -431,7 +434,7 @@ export default function Page() {
         </div>
 
         <footer className="mt-12 border-t border-zinc-200 pt-6 text-xs text-zinc-400">
-          UserSimBench · CondAgree on real{" "}
+          SWESimBench · CondAgree on real{" "}
           <a href="https://huggingface.co/datasets/SALT-NLP/SWE-chat" className="hover:text-zinc-700">SWE-chat</a> sessions ·
           <a href="/data" className="hover:text-zinc-700"> download the data</a> ·
           built on <a href="https://github.com/AlienKevin/user-simulator" className="hover:text-zinc-700">user.skill</a>.

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import blobs from "./blobs.json";
 
 export const metadata: Metadata = {
-  title: "Data — UserSimBench trial results",
+  title: "Data: SWESimBench trial results",
   description: "Download the raw experiment data behind the CondAgree results. Public, for readers and their agents.",
 };
 
@@ -16,7 +16,7 @@ export default function DataPage() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
-          <h1 className="text-sm font-semibold tracking-tight"><a href="/" className="hover:text-zinc-600">UserSimBench</a> · <span className="text-zinc-400">Data</span></h1>
+          <h1 className="text-sm font-semibold tracking-tight"><a href="/" className="hover:text-zinc-600">SWESimBench</a> · <span className="text-zinc-400">Data</span></h1>
           <div className="flex items-center gap-3 text-xs text-zinc-500">
             <a href="/" className="hover:text-zinc-900">results</a>
             <a href="https://github.com/AlienKevin/user-simulator" target="_blank" rel="noreferrer" className="hover:text-zinc-900">github</a>
@@ -27,7 +27,7 @@ export default function DataPage() {
       <main className="mx-auto max-w-3xl px-6 pb-20">
         <div className="py-10">
           <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">download</div>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">Trial results — public, agent-readable</h2>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">Trial results: public, agent-readable</h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-700">
             Every artifact behind the <a href="/" className="text-blue-700 underline-offset-2 hover:underline">CondAgree results</a> is
             here: the 9-model × ±profile trials on a 20-developer, user- and repo-disjoint SWE-chat test split. Files are public on
@@ -37,7 +37,7 @@ export default function DataPage() {
 
         {/* AGENT ENTRY POINT */}
         <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 font-mono text-[11px] leading-relaxed text-zinc-300">
-          <div className="mb-2 text-[10px] uppercase tracking-wider text-zinc-500">for an agent — start here</div>
+          <div className="mb-2 text-[10px] uppercase tracking-wider text-zinc-500">for an agent: start here</div>
           <div className="text-zinc-400"># machine-readable catalog (lists every file + schema):</div>
           <div className="break-all text-emerald-300">{index}</div>
           <pre className="mt-3 whitespace-pre-wrap text-zinc-300">{`curl -s ${index} | jq .            # the catalog
@@ -69,7 +69,7 @@ curl -s ${files.find((f) => f.name === "raw.jsonl")?.url} \\   # every generatio
         {/* SCHEMA / WHAT'S IN IT */}
         <section className="mt-6 grid gap-3 md:grid-cols-2">
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h3 className="font-mono text-sm font-semibold text-zinc-900">raw.jsonl — every trial</h3>
+            <h3 className="font-mono text-sm font-semibold text-zinc-900">raw.jsonl: every trial</h3>
             <p className="mt-1.5 text-xs leading-relaxed text-zinc-600">
               NDJSON. Two record types. <span className="font-mono">gen</span>:{" "}
               <span className="font-mono text-zinc-700">{`{key, kind:"gen", point_id, slug, model, model_id, backend, effort, cond, text, ts, seed?}`}</span>.
@@ -78,7 +78,7 @@ curl -s ${files.find((f) => f.name === "raw.jsonl")?.url} \\   # every generatio
             </p>
           </div>
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h3 className="font-mono text-sm font-semibold text-zinc-900">points.jsonl — the test set</h3>
+            <h3 className="font-mono text-sm font-semibold text-zinc-900">points.jsonl: the test set</h3>
             <p className="mt-1.5 text-xs leading-relaxed text-zinc-600">
               The 480 frozen held-out moments:{" "}
               <span className="font-mono text-zinc-700">{`{point_id, slug, repo, turn_index, prev_agent, real_text}`}</span>.
@@ -86,7 +86,7 @@ curl -s ${files.find((f) => f.name === "raw.jsonl")?.url} \\   # every generatio
             </p>
           </div>
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h3 className="font-mono text-sm font-semibold text-zinc-900">summary.json — results</h3>
+            <h3 className="font-mono text-sm font-semibold text-zinc-900">summary.json: results</h3>
             <p className="mt-1.5 text-xs leading-relaxed text-zinc-600">
               Per <span className="font-mono">model/condition</span>: CondAgree macro mean + 95% CI + the 20 per-developer values, plus
               the <span className="font-mono">lucky_guess</span> line and the real move distribution. Models:{" "}
@@ -96,9 +96,9 @@ curl -s ${files.find((f) => f.name === "raw.jsonl")?.url} \\   # every generatio
           <div className="rounded-lg border border-zinc-200 bg-white p-4">
             <h3 className="font-mono text-sm font-semibold text-zinc-900">manifest · splits · taxonomy</h3>
             <p className="mt-1.5 text-xs leading-relaxed text-zinc-600">
-              <span className="font-mono">manifest.json</span> — full config (models, OpenRouter ids, reasoning efforts, concurrency, git
-              sha). <span className="font-mono">splits.json</span> — the user- and repo-disjoint train/val/test split.{" "}
-              <span className="font-mono">taxonomy.json</span> — the 4-way move taxonomy + classifier prompt + inter-judge κ.
+              <span className="font-mono">manifest.json</span>: full config (models, OpenRouter ids, reasoning efforts, concurrency, git
+              sha). <span className="font-mono">splits.json</span>: the user- and repo-disjoint train/val/test split.{" "}
+              <span className="font-mono">taxonomy.json</span>: the 4-way move taxonomy + classifier prompt + inter-judge κ.
             </p>
           </div>
         </section>
@@ -115,7 +115,7 @@ curl -s ${files.find((f) => f.name === "raw.jsonl")?.url} \\   # every generatio
         </section>
 
         <footer className="mt-8 border-t border-zinc-200 pt-6 text-xs text-zinc-400">
-          UserSimBench · <a href="/" className="hover:text-zinc-700">results</a> · data on Vercel Blob (public).
+          SWESimBench · <a href="/" className="hover:text-zinc-700">results</a> · data on Vercel Blob (public).
         </footer>
       </main>
     </div>
