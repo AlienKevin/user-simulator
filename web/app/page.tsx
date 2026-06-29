@@ -80,7 +80,7 @@ function Move({ m }: { m: string }) {
 function Heading({ n, id, title }: { n?: string; id: string; title: string }) {
   return (
     <div className="group flex items-baseline gap-3">
-      {n && <span className="font-mono text-xs text-zinc-300">{n}</span>}
+      {n && <span className="font-mono text-xs font-semibold text-blue-600">{n}</span>}
       <h2 className="text-xl font-semibold tracking-tight text-zinc-900">
         <a href={`#${id}`} className="decoration-zinc-300 underline-offset-4 hover:underline">{title}</a>
       </h2>
@@ -92,7 +92,7 @@ function Section({ n, id, title, dek, children }: { n?: string; id: string; titl
   return (
     <section id={id} className="scroll-mt-16 border-t border-zinc-200 pt-10">
       <Heading n={n} id={id} title={title} />
-      {dek && <p className="mt-1 max-w-2xl text-sm text-zinc-500">{dek}</p>}
+      {dek && <p className="mt-2 max-w-2xl border-l-2 border-blue-500 pl-3 text-[15px] font-medium leading-relaxed text-zinc-800">{dek}</p>}
       <div className="mt-4 space-y-3 text-[14px] leading-relaxed text-zinc-700">{children}</div>
     </section>
   );
@@ -612,11 +612,43 @@ export default function Page() {
           </h2>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-700">
             A <span className="font-semibold text-zinc-900">user simulator</span> stands in for the human developer so we can stress-test
-            coding agents without a human in the loop. We score one thing, <span className="font-semibold">CondAgree</span>: at each real
-            moment, did the simulator make the <em>same move</em> the developer made? The leaderboard is right below. Then this page walks
-            the pipeline behind it: the leak-free split, the eval, the move taxonomy, the metric, and finally what a profile actually does,
-            a case study of <em>why</em> it helps some simulators and hurts others.
+            coding agents without a human in the loop. We grade one thing, <span className="font-semibold">CondAgree</span>: at each real
+            moment in a recorded session, did the simulator make the <em>same move</em> the developer made next? We freeze nine simulators
+            and score all 480 moments twice, with and without a profile of the developer, on a leak-free, user- and repo-disjoint split.
+            The leaderboard is below; the rest of the page walks the split, eval, move taxonomy, metric, and a case study of <em>why</em> a
+            profile helps some simulators and hurts others.
           </p>
+          <div className="mt-5 rounded-lg border border-zinc-200 bg-white px-5 py-4">
+            <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">key takeaways</div>
+            <ul className="mt-2 space-y-2 text-[13.5px] leading-relaxed text-zinc-700">
+              <li>
+                <span className="font-semibold text-zinc-900">The top is a cluster, not a winner.</span> With no profile, GPT-5.5 and
+                Gemini-3.1-Pro lead at around 0.52 to 0.55 and every general model clears the 0.419 chance line; overlapping CIs make the
+                leaders a cluster. The small OSim simulators trail, with OSim-4B the only one below chance.
+              </li>
+              <li>
+                <span className="font-semibold text-zinc-900">A developer profile is the real lever, but only for some.</span> It barely
+                moves, or slightly hurts, the strongest general models that already read the developer from the conversation, yet it lifts the
+                small simulators (osim-4b +0.073) and above all <span className="font-semibold text-teal-700">GLM-5.2 (+0.099)</span>, which
+                vaults from mid-pack to the top of the leaderboard.
+              </li>
+              <li>
+                <span className="font-semibold text-zinc-900">The lift is content, not style.</span> An ablation shows GLM's gain comes from
+                developer-specific content, draining a generic helpful-assistant reflex (clarifying questions the real developer never asks),
+                not from merely getting terser.
+              </li>
+              <li>
+                <span className="font-semibold text-zinc-900">Reasoning effort is not a lever.</span> Doubling DeepSeek-V4-Pro's reasoning
+                budget from low to max moved CondAgree within noise (+0.017 with the profile, +0.001 without); the task rewards reading the
+                situation, not deliberation.
+              </li>
+              <li>
+                <span className="font-semibold text-zinc-900">Leak-free and fully public.</span> A user- and repo-disjoint test split, a single
+                Haiku judge over a 4-way move taxonomy, 9 simulators across 480 real moments in 2 conditions; every generation, label, and
+                split is downloadable.
+              </li>
+            </ul>
+          </div>
           <p className="mt-4 text-[13px] text-zinc-500">
             Every generation, label, and split is public.{" "}
             <a href="/data" className="font-semibold text-blue-700 underline-offset-2 hover:underline">Download the full data →</a>
@@ -647,6 +679,16 @@ export default function Page() {
               simulators out of the box. Hold that thought.
             </p>
             <Baseline exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <p>
+              Before the profile question, one lever that turns out <em>not</em> to matter for this task: reasoning effort. Each general model
+              runs at a fixed effort (the bracket after its name), so to isolate that lever we re-ran DeepSeek-V4-Pro at maximum effort with the
+              prompt, seeds, and judge held fixed, changing nothing but the reasoning budget. Roughly doubling its hidden reasoning (about 230 to
+              410 tokens per reply) shifted CondAgree by just <span className="font-semibold text-zinc-700">+0.017 with the profile (0.509 to
+              0.526)</span> and <span className="font-semibold text-zinc-700">+0.001 without (0.486 to 0.487)</span>, both well inside the ±0.08
+              CI. Predicting a developer's next move turns on reading the conversation and persona, not on deliberation, so the cheaper
+              low-effort setting (used by the other DeepSeek models) scores the same within noise, and a max-effort reply was if anything a touch
+              terser. Reasoning level is not a lever for SWESimBench; the profile is.
+            </p>
             <p>
               The rest of this section asks the sharper question: what does adding the developer's profile change? The chart below plots each
               model's profile effect, the change in CondAgree when the developer's profile is added. A profile clearly
