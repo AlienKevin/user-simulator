@@ -769,3 +769,23 @@ continue
 <summary>Agent "why is DeepSeek-V4-Pro only [low]?" finished</summary>
 <note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the ...
 
+### Prompt 123
+
+how many total runs did we test for the leaderboard? (not counting models/efforts not shown in the leaderboard)
+
+### Prompt 124
+
+what's GLM-5.2's ranking in https://swesimbench.vercel.app/#leaderboard without vs with profile?
+
+### Prompt 125
+
+"only from their earlier sessions, and we score only on their later, held-out turns" by later, held-out turns you mean some later sessions are reserved specifically for evals and some early sessions are only used for constructing profiles?
+
+### Prompt 126
+
+"(Cohen's κ across Haiku-4.5, Opus-4.8, and GPT-5)" is GPT-5.5 or actually GPT-5?
+
+### Prompt 127
+
+rephrase mentions of 9 simulators/models to 7, we hid the 2 deepseek variants
+
