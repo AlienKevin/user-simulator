@@ -25,6 +25,8 @@ const files = [
     desc: "Case-study data for glm-5.2 / gemini-3.1-pro / osim-4b: per-developer CondAgree ±profile (delta), and every moment where the profile flipped the move (with the agent turn, real message+move, and both ±profile generations+moves)." },
   { local: `${SRC}/experiments/condagree_multi/category_recall.json`, name: "category_recall.json", ct: "application/json",
     desc: "Per-move agree-rate (recall) for all 9 models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap." },
+  { local: `${SRC}/experiments/condagree_multi/verbosity.json`, name: "verbosity.json", ct: "application/json",
+    desc: "Average + median message length (words) per model, both conditions, vs the real developers; plus each model's CondAgree no-profile/with-profile. Drives the verbosity chart." },
 ];
 
 const uploaded = [];

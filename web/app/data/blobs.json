@@ -48,6 +48,12 @@
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/category_recall.json",
    "bytes": 4247,
    "description": "Per-move agree-rate (recall) for all 9 models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap."
+  },
+  {
+   "name": "verbosity.json",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/verbosity.json",
+   "bytes": 1844,
+   "description": "Average + median message length (words) per model, both conditions, vs the real developers; plus each model's CondAgree no-profile/with-profile. Drives the verbosity chart."
   }
  ],
  "models": [

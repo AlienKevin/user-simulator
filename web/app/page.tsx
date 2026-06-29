@@ -42,6 +42,21 @@ const CAT = {
     { id: "deepseek-v3.1", label: "DeepSeek-V3.1", d: { approve: 0.117, critical: 0.053, directive: -0.082, inquiry: -0.025 }, wp: { approve: 0.328, critical: 0.212, directive: 0.772, inquiry: 0.075 } },
   ],
 };
+// avg words per message, no-profile (np) vs with-profile (wp). Source: bench/profileopt/verbosity.json
+const VERB = {
+  devMedian: 18, // typical real developer message (median; mean is 63, a long tail of spec/code dumps)
+  rows: [
+    { id: "osim-4b", label: "OSim-4B", kind: "specialized", np: 63.1, wp: 38.3 },
+    { id: "osim-8b", label: "OSim-8B", kind: "specialized", np: 61.5, wp: 52.0 },
+    { id: "glm-5.2", label: "GLM-5.2", kind: "general", np: 37.4, wp: 12.9 },
+    { id: "deepseek-v3.1", label: "DeepSeek-V3.1", kind: "general", np: 27.9, wp: 15.4 },
+    { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", kind: "general", np: 26.4, wp: 11.5 },
+    { id: "claude-opus-4.8", label: "Claude-Opus-4.8", kind: "general", np: 26.0, wp: 21.2 },
+    { id: "gpt-5.5", label: "GPT-5.5", kind: "general", np: 21.0, wp: 10.9 },
+    { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", kind: "general", np: 17.1, wp: 9.3 },
+    { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", kind: "general", np: 16.2, wp: 10.5 },
+  ],
+};
 
 /* ----------------------------- primitives ----------------------------- */
 function Mono({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -209,6 +224,49 @@ function CategoryAgree({ exclude = [] }: { exclude?: string[] }) {
         <span className="font-semibold text-violet-700">OSim</span> models gain on approve, critical, and directive but lose on the rare inquiry,
         as the profile stops them over-asking. The strongest general models (GPT-5.5, Gemini-3.1-Pro) barely move. Columns are weighted by how
         often developers actually make each move (directive 52%, inquiry only 8%).
+      </p>
+    </div>
+  );
+}
+
+// average words/message, no-profile vs with-profile, with a developer-length reference line
+function WordBar({ label, value, color, max, dev }: { label: string; value: number; color: string; max: number; dev: number }) {
+  return (
+    <div className="flex items-center gap-2 py-0.5 text-xs">
+      <div className="w-20 shrink-0 text-right text-[10px] text-zinc-500">{label}</div>
+      <div className="relative h-5 flex-1 rounded bg-zinc-100">
+        <div className="absolute bottom-[-3px] top-[-3px] border-l-2 border-dashed border-zinc-500/70" style={{ left: `${(dev / max) * 100}%` }} />
+        <div className={`h-full rounded ${color}`} style={{ width: `${Math.min(100, (value / max) * 100)}%` }} />
+      </div>
+      <div className="w-14 shrink-0 font-mono text-[11px] text-zinc-500">{value} w</div>
+    </div>
+  );
+}
+function Verbosity({ exclude = [] }: { exclude?: string[] }) {
+  const rows = VERB.rows.filter((r) => !exclude.includes(r.id));
+  const MAX = 65;
+  return (
+    <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
+      <div className="mb-1 text-xs font-semibold text-zinc-700">how wordy each simulator is: average words per message, with and without a profile</div>
+      <div className="mb-3 text-[11px] text-zinc-400">dashed line = a typical developer message (≈{VERB.devMedian} words, median) · scale 0–{MAX} words</div>
+      {rows.map((r) => {
+        const bar = r.kind === "specialized" ? "bg-violet-500" : "bg-indigo-500";
+        const light = r.kind === "specialized" ? "bg-violet-300" : "bg-indigo-300";
+        return (
+          <div key={r.id} className="mb-3">
+            <div className="mb-0.5 flex items-baseline gap-2">
+              <span className="font-mono text-xs font-semibold text-zinc-900">{r.label}</span>
+              <span className="ml-auto font-mono text-[11px] text-zinc-400">{r.np} → <span className="font-semibold text-zinc-700">{r.wp}</span> words</span>
+            </div>
+            <WordBar label="no profile" value={r.np} color={light} max={MAX} dev={VERB.devMedian} />
+            <WordBar label="with profile" value={r.wp} color={bar} max={MAX} dev={VERB.devMedian} />
+          </div>
+        );
+      })}
+      <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
+        The profile makes every simulator terser, but length is a <em>symptom</em>, not the lever: GPT-5.5 also roughly halves its words and
+        gains nothing, and GLM-5.2's longest no-profile messages actually agreed fine. What matters is <em>what</em> the extra words were. For
+        GLM, the profile mostly strips out clarifying questions and assistant-style elaboration it added on its own.
       </p>
     </div>
   );
@@ -527,6 +585,11 @@ export default function Page() {
               each model's profile is doing something different, move by move, the clearest tell for <em>why</em> it helps.
             </p>
             <CategoryAgree exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <p>
+              One more lens: how much each simulator <em>says</em>. Without a profile, the simulators that gain most are also the wordiest, and
+              the profile collapses them toward a real developer's terse style.
+            </p>
+            <Verbosity exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
             <p>
               So the headline average hides the real story: the profile is doing different jobs for different models. The next section takes
               one developer and three of these simulators to show exactly what those jobs are.
