@@ -1,9 +1,8 @@
 // SWESimBench: explanatory walkthrough centered on CondAgree.
 // Content: workflow-drafted + fact-checked against bench/profileopt/experiments/condagree_multi/
 // {summary,manifest,taxonomy,splits,cases}.json. Chart data = summary.json (9 models x ±profile).
-"use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 const LUCKY = 0.419;
 
@@ -39,14 +38,22 @@ function Move({ m }: { m: string }) {
   const key = m.split(" ")[0];
   return <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold ${MOVE_STYLE[key] ?? "bg-zinc-100 text-zinc-500"}`}>{m}</span>;
 }
-function Section({ n, id, title, dek, children }: { n: string; id: string; title: string; dek: string; children: ReactNode }) {
+function Heading({ n, id, title }: { n?: string; id: string; title: string }) {
+  return (
+    <div className="group flex items-baseline gap-3">
+      {n && <span className="font-mono text-xs text-zinc-300">{n}</span>}
+      <h2 className="text-xl font-semibold tracking-tight text-zinc-900">
+        <a href={`#${id}`} className="decoration-zinc-300 underline-offset-4 hover:underline">{title}</a>
+      </h2>
+      <a href={`#${id}`} aria-label="link to this section" className="font-mono text-zinc-300 opacity-0 transition hover:text-zinc-500 group-hover:opacity-100">#</a>
+    </div>
+  );
+}
+function Section({ n, id, title, dek, children }: { n?: string; id: string; title: string; dek?: string; children: ReactNode }) {
   return (
     <section id={id} className="scroll-mt-16 border-t border-zinc-200 pt-10">
-      <div className="flex items-baseline gap-3">
-        <span className="font-mono text-xs text-zinc-300">{n}</span>
-        <h2 className="text-xl font-semibold tracking-tight text-zinc-900">{title}</h2>
-      </div>
-      <p className="mt-1 max-w-2xl text-sm text-zinc-500">{dek}</p>
+      <Heading n={n} id={id} title={title} />
+      {dek && <p className="mt-1 max-w-2xl text-sm text-zinc-500">{dek}</p>}
       <div className="mt-4 space-y-3 text-[14px] leading-relaxed text-zinc-700">{children}</div>
     </section>
   );
@@ -70,22 +77,17 @@ function CABar({ label, value, ci, color, max = 0.75 }: { label: string; value: 
     </div>
   );
 }
-function Chart() {
-  const [shown, setShown] = useState<Set<string>>(() => new Set(MODELS.filter((m) => !m.hidden).map((m) => m.id)));
-  const toggle = (id: string) => setShown((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const allOn = shown.size === MODELS.length;
-  const setAll = (on: boolean) => setShown(on ? new Set(MODELS.map((m) => m.id)) : new Set(MODELS.filter((m) => !m.hidden).map((m) => m.id)));
-  const visible = MODELS.filter((m) => shown.has(m.id));
+function Leaderboard() {
+  const rows = [...MODELS].sort((a, b) => b.wp.ca - a.wp.ca);
   const delta = (m: M) => +(m.wp.ca - m.np.ca).toFixed(3);
   return (
-    <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
+    <div className="rounded-xl border border-zinc-200 bg-white p-5">
       <div className="mb-1 flex items-baseline justify-between">
         <div className="text-xs font-semibold text-zinc-700">CondAgree: right move, right moment (higher is better)</div>
         <div className="text-[10px] text-zinc-400">sorted by with-profile</div>
       </div>
       <div className="mb-3 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · whisker = 95% CI across 20 developers · scale 0–0.75</div>
-      {visible.length === 0 && <div className="py-4 text-center text-xs text-zinc-400">No models selected. Pick some below.</div>}
-      {visible.map((m) => {
+      {rows.map((m) => {
         const d = delta(m);
         const bar = m.kind === "specialized" ? "bg-violet-500" : "bg-indigo-500";
         const barLight = m.kind === "specialized" ? "bg-violet-300" : "bg-indigo-300";
@@ -106,19 +108,38 @@ function Chart() {
         <span className="ml-1 inline-block size-2 rounded-sm bg-indigo-500 align-middle" /> general models. Everything clears the
         lucky-guess line except <span className="text-amber-700">OSim-4B without a profile</span>.
       </p>
-      <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-zinc-100 pt-3">
-        <span className="mr-1 text-[10px] uppercase tracking-wider text-zinc-400">show</span>
-        {MODELS.map((m) => {
-          const on = shown.has(m.id);
-          return (
-            <button key={m.id} onClick={() => toggle(m.id)} aria-pressed={on}
-              className={`rounded-full border px-2 py-0.5 font-mono text-[10px] transition ${on ? (m.kind === "specialized" ? "border-violet-600 bg-violet-600 text-white" : "border-indigo-600 bg-indigo-600 text-white") : "border-zinc-200 bg-white text-zinc-400 hover:border-zinc-400"}`}>
-              {m.label}
-            </button>
-          );
-        })}
-        <button onClick={() => setAll(!allOn)} className="ml-1 text-[10px] text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline">{allOn ? "reset" : "show all 9"}</button>
-      </div>
+    </div>
+  );
+}
+// diverging "profile effect" bars: how much CondAgree moves when the profile is added
+function ProfileEffect() {
+  const rows = MODELS.map((m) => ({ ...m, d: +(m.wp.ca - m.np.ca).toFixed(3) })).sort((a, b) => b.d - a.d);
+  const MAX = 0.1;
+  return (
+    <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
+      <div className="mb-1 text-xs font-semibold text-zinc-700">the profile effect: change in CondAgree when the developer's profile is added</div>
+      <div className="mb-4 text-[11px] text-zinc-400">center = no effect · bar to the right = profile helps · bar to the left = profile hurts</div>
+      {rows.map((m) => {
+        const pos = m.d >= 0;
+        const w = Math.min(1, Math.abs(m.d) / MAX) * 50;
+        const benefits = pos && (m.kind === "specialized" || m.id === "glm-5.2");
+        const color = benefits ? (m.kind === "specialized" ? "bg-violet-500" : "bg-teal-500") : pos ? "bg-zinc-300" : "bg-rose-400";
+        return (
+          <div key={m.id} className="flex items-center gap-2 py-0.5 text-xs">
+            <div className="w-32 shrink-0 text-right font-mono text-[11px] text-zinc-700">{m.label}</div>
+            <div className="relative h-4 flex-1">
+              <div className="absolute inset-y-0 left-1/2 border-l border-zinc-300" />
+              <div className={`absolute top-1/2 h-2.5 -translate-y-1/2 rounded ${color}`} style={pos ? { left: "50%", width: `${w}%` } : { left: `${50 - w}%`, width: `${w}%` }} />
+            </div>
+            <div className={`w-12 shrink-0 text-right font-mono text-[11px] ${benefits ? "font-semibold text-emerald-700" : pos ? "text-zinc-500" : "text-rose-600"}`}>{pos ? "+" : ""}{m.d}</div>
+          </div>
+        );
+      })}
+      <p className="mt-3 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
+        The bars that reach right are the <span className="font-semibold text-violet-700">purpose-built OSim models</span> and{" "}
+        <span className="font-semibold text-teal-700">GLM-5.2</span>. The strongest general models sit on the center line or just left of it:
+        a profile gives them almost nothing.
+      </p>
     </div>
   );
 }
@@ -286,10 +307,7 @@ function Row({ label, text, move }: { label: string; text: string; move: string 
 function CaseStudy() {
   return (
     <section id="case-study" className="scroll-mt-16 border-t border-zinc-200 pt-10">
-      <div className="flex items-baseline gap-3">
-        <span className="font-mono text-xs text-zinc-300">06</span>
-        <h2 className="text-xl font-semibold tracking-tight text-zinc-900">case study: one developer, three simulators, three different jobs</h2>
-      </div>
+      <Heading n="06" id="case-study" title="case study: one developer, three simulators, three different jobs" />
       <p className="mt-1 max-w-2xl text-sm text-zinc-500">the profile helped GLM-5.2 and OSim-4B on <Mono>gtrrz-victor</Mono> but hurt Gemini-3.1-Pro, because it was fixing three different problems.</p>
       <div className="mt-4 space-y-3 text-[14px] leading-relaxed text-zinc-700">
         <p>The chart shows profile lift varies by model. To see why, take one developer, <Mono>gtrrz-victor</Mono>, and watch three simulators predict his held-out moves. Same developer, same profile, opposite signs:</p>
@@ -378,7 +396,7 @@ const SECTIONS = [
 
 /* ------------------------------- page --------------------------------- */
 export default function Page() {
-  const nav = [["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["results", "results"], ["case study", "case-study"]];
+  const nav = [["leaderboard", "leaderboard"], ["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["the results", "results"], ["case study", "case-study"]];
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
@@ -401,9 +419,9 @@ export default function Page() {
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-700">
             A <span className="font-semibold text-zinc-900">user simulator</span> stands in for the human developer so we can stress-test
             coding agents without a human in the loop. We score one thing, <span className="font-semibold">CondAgree</span>: at each real
-            moment, did the simulator make the <em>same move</em> the developer made? This page walks the whole pipeline: the leak-free
-            split, the eval, the move taxonomy, the metric, then the results for 9 models and a case study of <em>why</em> a profile helps
-            some and hurts others.
+            moment, did the simulator make the <em>same move</em> the developer made? The leaderboard is right below. Then this page walks
+            the pipeline behind it: the leak-free split, the eval, the move taxonomy, the metric, and finally what a profile actually does,
+            a case study of <em>why</em> it helps some simulators and hurts others.
           </p>
           <div className="mt-5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
             {nav.map(([t, h]) => <a key={h} href={`#${h}`} className="font-mono hover:text-zinc-900">{t}</a>)}
@@ -411,6 +429,10 @@ export default function Page() {
         </div>
 
         <div className="space-y-10">
+          <Section id="leaderboard" title="SWESimBench Leaderboard">
+            <Leaderboard />
+          </Section>
+
           {SECTIONS.map((s) => (
             <Section key={s.id} n={s.n} id={s.id} title={s.title} dek={s.dek}>
               {s.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
@@ -418,17 +440,22 @@ export default function Page() {
             </Section>
           ))}
 
-          {/* RESULTS + CHART */}
-          <Section n="05" id="results" title="the results" dek="profile helps the small purpose-built simulators and GLM-5.2, but does little for the strongest general models.">
+          {/* RESULTS: the profile effect */}
+          <Section n="05" id="results" title="the results" dek="profile helps the small purpose-built simulators, but does little for the strongest general models, except for GLM-5.2.">
             <p>
-              The chart shows all 9 simulators, each with and without a profile, against the 0.419 lucky-guess line. Look at the gap between
-              a model's two bars and where each lands relative to the line. The headline: a profile clearly helps <span className="font-semibold text-teal-700">GLM-5.2 (+0.084, to 0.667, best overall)</span> and
-              the purpose-built OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, lifting it from below the line to above; osim-8b +0.049), but it's flat or slightly
-              negative for the strongest general models (deepseek-v3.1 −0.024, gemini-3.1-pro −0.019, gpt-5.5 ≈0), since they already read the
-              situation from the conversation alone. Every bar clears 0.419 except OSim-4B without a profile. With CIs of ±0.06–0.15 at
+              The leaderboard up top ranks every simulator. This section asks the sharper question: what does the profile actually do? The
+              chart below plots each model's profile effect, the change in CondAgree when the developer's profile is added. A profile clearly
+              helps the purpose-built OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, which lifts it from
+              below the lucky-guess line to above; osim-8b +0.049) and <span className="font-semibold text-teal-700">GLM-5.2 (+0.084, the
+              largest gain of all)</span>. For the strongest general models it does little to nothing: gpt-5.5 about zero, gemini-3.1-pro
+              −0.019, deepseek-v3.1 −0.024, since they already read the situation from the conversation alone. With CIs of ±0.06–0.15 at
               n=20, treat individual lifts as suggestive, not settled.
             </p>
-            <Chart />
+            <ProfileEffect />
+            <p>
+              So the headline average hides the real story: the profile is doing different jobs for different models. The next section takes
+              one developer and three of these simulators to show exactly what those jobs are.
+            </p>
           </Section>
 
           <CaseStudy />
