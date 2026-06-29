@@ -27,6 +27,8 @@ const files = [
     desc: "Per-move agree-rate (recall) for all 9 models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap." },
   { local: `${SRC}/experiments/condagree_multi/verbosity.json`, name: "verbosity.json", ct: "application/json",
     desc: "Average + median message length (words) per model, both conditions, vs the real developers; plus each model's CondAgree no-profile/with-profile. Drives the verbosity chart." },
+  { local: `${SRC}/experiments/condagree_multi/ablation.json`, name: "ablation.json", ct: "application/json",
+    desc: "Contrastive-prefix ablation for glm-5.2 + gpt-5.5: CondAgree under no-profile vs the real persona vs a content-free terse style prefix, with spurious-inquiry rate, word count, and per-move recall." },
 ];
 
 const uploaded = [];

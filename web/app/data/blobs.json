@@ -4,7 +4,7 @@
   {
    "name": "summary.json",
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/summary.json",
-   "bytes": 6756,
+   "bytes": 6918,
    "description": "Headline results: per (model, condition) CondAgree macro mean + 95% CI + per-user array; lucky_guess line; real move distribution."
   },
   {
@@ -34,19 +34,19 @@
   {
    "name": "raw.jsonl",
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/raw.jsonl",
-   "bytes": 4720074,
+   "bytes": 4976061,
    "description": "Every trial (one JSON per line). Generation: {key, kind:'gen', point_id, slug, model, model_id, backend, effort, cond('distilled'|'generic'), text, ts, seed?}. Move label: {key:'lab:haiku:<hash>', move}. Join gens to labels via the 4-way classifier on (prev_agent, text)."
   },
   {
    "name": "cases.json",
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/cases.json",
-   "bytes": 484800,
+   "bytes": 555599,
    "description": "Case-study data for glm-5.2 / gemini-3.1-pro / osim-4b: per-developer CondAgree ±profile (delta), and every moment where the profile flipped the move (with the agent turn, real message+move, and both ±profile generations+moves)."
   },
   {
    "name": "category_recall.json",
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/category_recall.json",
-   "bytes": 4247,
+   "bytes": 4240,
    "description": "Per-move agree-rate (recall) for all 9 models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap."
   },
   {
@@ -54,6 +54,12 @@
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/verbosity.json",
    "bytes": 1844,
    "description": "Average + median message length (words) per model, both conditions, vs the real developers; plus each model's CondAgree no-profile/with-profile. Drives the verbosity chart."
+  },
+  {
+   "name": "ablation.json",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/ablation.json",
+   "bytes": 2227,
+   "description": "Contrastive-prefix ablation for glm-5.2 + gpt-5.5: CondAgree under no-profile vs the real persona vs a content-free terse style prefix, with spurious-inquiry rate, word count, and per-move recall."
   }
  ],
  "models": [

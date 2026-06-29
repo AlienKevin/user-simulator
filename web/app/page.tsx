@@ -9,14 +9,14 @@ const LUCKY = 0.419;
 /* ----------------------------- chart data ----------------------------- */
 type M = { id: string; label: string; note: string; kind: "general" | "specialized"; hidden?: boolean; np: { ca: number; ci: number }; wp: { ca: number; ci: number } };
 const MODELS: M[] = [
-  { id: "glm-5.2", label: "GLM-5.2", note: "reasoning · max", kind: "general", np: { ca: 0.583, ci: 0.130 }, wp: { ca: 0.667, ci: 0.104 } },
-  { id: "gpt-5.5", label: "GPT-5.5", note: "reasoning · xhigh", kind: "general", np: { ca: 0.548, ci: 0.146 }, wp: { ca: 0.547, ci: 0.147 } },
+  { id: "glm-5.2", label: "GLM-5.2", note: "reasoning · max", kind: "general", np: { ca: 0.46, ci: 0.075 }, wp: { ca: 0.559, ci: 0.075 } },
+  { id: "gpt-5.5", label: "GPT-5.5", note: "reasoning · xhigh", kind: "general", np: { ca: 0.546, ci: 0.077 }, wp: { ca: 0.53, ci: 0.101 } },
+  { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", note: "reasoning · high", kind: "general", np: { ca: 0.522, ci: 0.09 }, wp: { ca: 0.51, ci: 0.084 } },
   { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", note: "reasoning", kind: "general", np: { ca: 0.486, ci: 0.065 }, wp: { ca: 0.509, ci: 0.081 } },
   { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", note: "reasoning", kind: "general", hidden: true, np: { ca: 0.496, ci: 0.075 }, wp: { ca: 0.507, ci: 0.098 } },
-  { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", note: "reasoning · high", kind: "general", np: { ca: 0.511, ci: 0.127 }, wp: { ca: 0.492, ci: 0.112 } },
-  { id: "deepseek-v3.1", label: "DeepSeek-V3.1", note: "reasoning", kind: "general", hidden: true, np: { ca: 0.512, ci: 0.075 }, wp: { ca: 0.488, ci: 0.093 } },
+  { id: "claude-opus-4.8", label: "Claude-Opus-4.8", note: "reasoning · xhigh", kind: "general", np: { ca: 0.464, ci: 0.085 }, wp: { ca: 0.487, ci: 0.09 } },
+  { id: "deepseek-v3.1", label: "DeepSeek-V3.1", note: "reasoning", kind: "general", hidden: true, np: { ca: 0.511, ci: 0.075 }, wp: { ca: 0.485, ci: 0.091 } },
   { id: "osim-8b", label: "OSim-8B", note: "purpose-built simulator", kind: "specialized", np: { ca: 0.427, ci: 0.064 }, wp: { ca: 0.476, ci: 0.072 } },
-  { id: "claude-opus-4.8", label: "Claude-Opus-4.8", note: "reasoning · xhigh", kind: "general", np: { ca: 0.457, ci: 0.107 }, wp: { ca: 0.465, ci: 0.143 } },
   { id: "osim-4b", label: "OSim-4B", note: "purpose-built simulator", kind: "specialized", np: { ca: 0.388, ci: 0.064 }, wp: { ca: 0.461, ci: 0.073 } },
 ];
 const MOVE_MIX = [
@@ -31,15 +31,15 @@ const CATS = ["approve", "critical", "directive", "inquiry"] as const;
 const CAT = {
   freq: { approve: 0.121, critical: 0.278, directive: 0.518, inquiry: 0.084 },
   rows: [
-    { id: "glm-5.2", label: "GLM-5.2", d: { approve: 0.163, critical: 0.124, directive: 0.112, inquiry: 0.041 }, wp: { approve: 0.465, critical: 0.383, directive: 0.834, inquiry: 0.1 } },
+    { id: "glm-5.2", label: "GLM-5.2", d: { approve: 0.155, critical: 0.086, directive: 0.112, inquiry: 0.05 }, wp: { approve: 0.414, critical: 0.328, directive: 0.826, inquiry: 0.1 } },
     { id: "osim-4b", label: "OSim-4B", d: { approve: 0.087, critical: 0.09, directive: 0.105, inquiry: -0.125 }, wp: { approve: 0.259, critical: 0.338, directive: 0.657, inquiry: 0.05 } },
     { id: "osim-8b", label: "OSim-8B", d: { approve: 0.138, critical: 0.136, directive: 0.028, inquiry: -0.2 }, wp: { approve: 0.345, critical: 0.331, directive: 0.681, inquiry: 0.1 } },
-    { id: "claude-opus-4.8", label: "Claude-Opus-4.8", d: { approve: -0.015, critical: -0.052, directive: 0.076, inquiry: 0.011 }, wp: { approve: 0.163, critical: 0.474, directive: 0.69, inquiry: 0.094 } },
+    { id: "claude-opus-4.8", label: "Claude-Opus-4.8", d: { approve: 0.0, critical: -0.026, directive: 0.064, inquiry: -0.023 }, wp: { approve: 0.155, critical: 0.451, directive: 0.681, inquiry: 0.077 } },
     { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", d: { approve: 0.103, critical: -0.037, directive: 0.028, inquiry: 0.022 }, wp: { approve: 0.379, critical: 0.256, directive: 0.754, inquiry: 0.075 } },
     { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", d: { approve: 0.138, critical: 0.03, directive: -0.04, inquiry: 0.028 }, wp: { approve: 0.345, critical: 0.271, directive: 0.742, inquiry: 0.128 } },
-    { id: "gpt-5.5", label: "GPT-5.5", d: { approve: -0.015, critical: -0.013, directive: -0.008, inquiry: -0.001 }, wp: { approve: 0.366, critical: 0.3, directive: 0.832, inquiry: 0.061 } },
-    { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", d: { approve: -0.002, critical: -0.045, directive: -0.002, inquiry: 0.0 }, wp: { approve: 0.354, critical: 0.215, directive: 0.813, inquiry: 0.029 } },
-    { id: "deepseek-v3.1", label: "DeepSeek-V3.1", d: { approve: 0.117, critical: 0.053, directive: -0.082, inquiry: -0.025 }, wp: { approve: 0.328, critical: 0.212, directive: 0.772, inquiry: 0.075 } },
+    { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", d: { approve: 0.034, critical: -0.037, directive: -0.004, inquiry: 0.0 }, wp: { approve: 0.362, critical: 0.226, directive: 0.806, inquiry: 0.025 } },
+    { id: "deepseek-v3.1", label: "DeepSeek-V3.1", d: { approve: 0.121, critical: 0.053, directive: -0.085, inquiry: -0.025 }, wp: { approve: 0.328, critical: 0.211, directive: 0.77, inquiry: 0.075 } },
+    { id: "gpt-5.5", label: "GPT-5.5", d: { approve: -0.017, critical: -0.06, directive: -0.009, inquiry: 0.025 }, wp: { approve: 0.328, critical: 0.286, directive: 0.81, inquiry: 0.075 } },
   ],
 };
 // avg words per message, no-profile (np) vs with-profile (wp). Source: bench/profileopt/verbosity.json
@@ -48,15 +48,22 @@ const VERB = {
   rows: [
     { id: "osim-4b", label: "OSim-4B", kind: "specialized", np: 63.1, wp: 38.3 },
     { id: "osim-8b", label: "OSim-8B", kind: "specialized", np: 61.5, wp: 52.0 },
-    { id: "glm-5.2", label: "GLM-5.2", kind: "general", np: 37.4, wp: 12.9 },
-    { id: "deepseek-v3.1", label: "DeepSeek-V3.1", kind: "general", np: 27.9, wp: 15.4 },
+    { id: "glm-5.2", label: "GLM-5.2", kind: "general", np: 34.8, wp: 12.9 },
+    { id: "deepseek-v3.1", label: "DeepSeek-V3.1", kind: "general", np: 27.9, wp: 15.3 },
     { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", kind: "general", np: 26.4, wp: 11.5 },
-    { id: "claude-opus-4.8", label: "Claude-Opus-4.8", kind: "general", np: 26.0, wp: 21.2 },
-    { id: "gpt-5.5", label: "GPT-5.5", kind: "general", np: 21.0, wp: 10.9 },
+    { id: "claude-opus-4.8", label: "Claude-Opus-4.8", kind: "general", np: 25.4, wp: 19.8 },
+    { id: "gpt-5.5", label: "GPT-5.5", kind: "general", np: 21.4, wp: 11.0 },
     { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", kind: "general", np: 17.1, wp: 9.3 },
-    { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", kind: "general", np: 16.2, wp: 10.5 },
+    { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", kind: "general", np: 15.9, wp: 10.0 },
   ],
 };
+
+// contrastive-prefix ablation: real persona vs a content-free "be terse, no questions" prefix.
+// Source: bench/profileopt/ablation.json
+const ABL = [
+  { id: "glm-5.2", label: "GLM-5.2", generic: 0.46, persona: 0.559, style: 0.484, accent: "bg-teal-500" },
+  { id: "gpt-5.5", label: "GPT-5.5", generic: 0.546, persona: 0.53, style: 0.463, accent: "bg-indigo-400" },
+];
 
 /* ----------------------------- primitives ----------------------------- */
 function Mono({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -265,8 +272,9 @@ function Verbosity({ exclude = [] }: { exclude?: string[] }) {
       })}
       <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
         The profile makes every simulator terser, but length is a <em>symptom</em>, not the lever: GPT-5.5 also roughly halves its words and
-        gains nothing, and GLM-5.2's longest no-profile messages actually agreed fine. What matters is <em>what</em> the extra words were. For
-        GLM, the profile mostly strips out clarifying questions and assistant-style elaboration it added on its own.
+        gets slightly <em>worse</em>, and GLM-5.2's longest no-profile messages actually agreed fine. What matters is <em>what</em> the extra
+        words were. For GLM the profile strips out clarifying questions and assistant elaboration, but the ablation below shows that
+        reflex-removal is only about a quarter of the story.
       </p>
     </div>
   );
@@ -300,6 +308,31 @@ function Baseline({ exclude = [] }: { exclude?: string[] }) {
         <span className="ml-1 inline-block size-2 rounded-sm bg-violet-400 align-middle" /> purpose-built OSim. Before any profile, the general
         frontier models are the better simulators and the small OSim models trail; <span className="text-amber-700">OSim-4B</span> is the only one
         below the chance line. (CIs overlap, so the top of the ranking is a cluster, not a clean winner.)
+      </p>
+    </div>
+  );
+}
+
+// ablation: three prompts per model (no profile / real persona / content-free terse style)
+function Ablation() {
+  return (
+    <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
+      <div className="mb-1 text-xs font-semibold text-zinc-700">does a content-free “be terse, don’t ask questions” prefix reproduce the gain?</div>
+      <div className="mb-4 text-[11px] text-zinc-400">dashed line = lucky-guess <Mono>{LUCKY}</Mono> · CondAgree macro · three prompts per model</div>
+      {ABL.map((r) => (
+        <div key={r.id} className="mb-4">
+          <div className="mb-0.5 font-mono text-xs font-semibold text-zinc-900">{r.label}</div>
+          <CABar label="no profile" value={r.generic} ci={0} color="bg-zinc-300" />
+          <CABar label="real persona" value={r.persona} ci={0} color={r.accent} />
+          <CABar label="terse-only" value={r.style} ci={0} color="bg-amber-300" />
+        </div>
+      ))}
+      <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
+        For <span className="font-semibold text-teal-700">GLM-5.2</span>, the content-free “terse, no questions” prefix
+        (<span className="text-amber-700">terse-only</span>) suppresses the same over-asking (spurious inquiry 0.11→0.03) but recovers only
+        about a <span className="font-semibold">quarter</span> of the real persona's gain, and it <em>craters</em> critical recall (0.24→0.17)
+        because it doesn't know <em>when</em> this developer pushes back. The other three-quarters is developer-specific content. For GPT-5.5,
+        every prefix hurts: it was already near its ceiling.
       </p>
     </div>
   );
@@ -435,14 +468,14 @@ const VICTOR = [
   { m: "osim-4b", a: 0.267, b: 0.600, d: "+0.33" },
 ];
 const CASES = [
-  { name: "glm-5.2", up: true, effect: "+0.20 here (0.433 → 0.633) · helps broadly (58 wins / 20 losses across developers)",
+  { name: "glm-5.2", up: true, effect: "+0.20 here (0.433 → 0.633) · helps broadly (80 wins / 31 losses across developers)",
     mechanism: "A capable generalist that reads the situation but defaults to a polite, neutral voice. The profile supplies Victor's actual temperament (insistent, willing to push back), so it takes the critical stance instead of softening into a clarification.",
     agent: "“The only place clearFilesystemPrompt is called is at line 959, and it's already guarded…” (pushing back, implying nothing is wrong)",
     real: ["“If we find that there are carry over files, we should not delete the prompt.txt from the metadata” (insistent, repeats himself).", "critical"],
     profile: ["“😭 I've said this three times. Do not delete prompt.txt when there are carry over files. Fix it.”", "critical (MATCH)"],
     generic: ["a long, polite re-clarification of the requirement.", "directive (MISS)"],
     reads: "the profile transplants Victor's voice, so GLM pushes back where the generic prompt only re-explains." },
-  { name: "gemini-3.1-pro", up: false, effect: "−0.10 here (0.700 → 0.600) · a wash overall (42 wins / 47 losses)",
+  { name: "gemini-3.1-pro", up: false, effect: "−0.10 here (0.700 → 0.600) · a wash overall (61 wins / 65 losses)",
     mechanism: "Already reads the moment well. Without a profile it picks Victor's move correctly on its own. The profile gives it nothing to fix and instead makes it over-think: it narrates the task framing to itself and breaks character.",
     agent: "“All done. 9 files modified, ~87 stderr prints replaced…”",
     real: ["gives a concrete next instruction: a replacement list / “run the grep and commit”.", "directive"],
@@ -557,7 +590,7 @@ const SECTIONS = [
 
 /* ------------------------------- page --------------------------------- */
 export default function Page() {
-  const nav = [["leaderboard", "leaderboard"], ["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["the results", "results"], ["case study", "case-study"]];
+  const nav = [["leaderboard", "leaderboard"], ["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["the results", "results"], ["case study", "case-study"], ["the ablation", "ablation"]];
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
@@ -604,20 +637,20 @@ export default function Page() {
           {/* RESULTS: the profile effect */}
           <Section n="05" id="results" title="the results" dek="profile helps the small purpose-built simulators, but does little for the strongest general models, except for GLM-5.2.">
             <p>
-              Start with the baseline: how good is each model as a user-simulator with no profile at all? Ranked by no-profile CondAgree, the
-              general frontier models lead, with GLM-5.2 and GPT-5.5 highest (around 0.55 to 0.58), and every general model clears the 0.419
-              chance line. The small purpose-built OSim simulators trail, and OSim-4B is the only model below the line. Raw capability already
-              buys a lot.
+              Start with the baseline: how good is each model as a user-simulator with no profile at all? Ranked by no-profile CondAgree,
+              GPT-5.5 and Gemini-3.1-Pro lead (around 0.52 to 0.55) and every general model clears the 0.419 chance line; the small purpose-built
+              OSim simulators trail, with OSim-4B the only one below it. Note where GLM-5.2 sits: mid-pack at 0.46, one of the weaker general
+              simulators out of the box. Hold that thought.
             </p>
             <Baseline exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
             <p>
               The rest of this section asks the sharper question: what does adding the developer's profile change? The chart below plots each
               model's profile effect, the change in CondAgree when the developer's profile is added. A profile clearly
               helps the purpose-built OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, which lifts it from
-              below the lucky-guess line to above; osim-8b +0.049) and <span className="font-semibold text-teal-700">GLM-5.2 (+0.084, the
-              largest gain of all)</span>. For the strongest general models it does little to nothing: gpt-5.5 about zero, gemini-3.1-pro
-              −0.019, since they already read the situation from the conversation alone. With CIs of ±0.06–0.15 at
-              n=20, treat individual lifts as suggestive, not settled.
+              below the lucky-guess line to above; osim-8b +0.049) and, most of all, <span className="font-semibold text-teal-700">GLM-5.2
+              (+0.099)</span>, which vaults it from mid-pack to the top of the leaderboard. For the strongest general models it does nothing or
+              slightly hurts: gpt-5.5 −0.016, gemini-3.1-pro −0.012, since they already read the situation from the conversation alone. With CIs
+              of ±0.06–0.15 at n=20, treat individual lifts as suggestive, not settled.
             </p>
             <ProfileEffect exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
             <p>
@@ -637,6 +670,30 @@ export default function Page() {
           </Section>
 
           <CaseStudy />
+
+          <Section n="07" id="ablation" title="the ablation: content, not just style" dek="we tested whether GLM's gain is generic reflex-suppression or developer-specific content. It is mostly content.">
+            <p>
+              The case study suggests a profile works by draining a generic “helpful assistant” reflex: GLM-5.2 kept asking clarifying
+              questions the real developer never would. So we tested that directly. We replaced GLM's developer-specific persona with a
+              content-free instruction, “you are a terse senior engineer; do not ask clarifying questions; reply in under 12 words,” and
+              re-scored. If that reproduced the gain, the win was just reflex-suppression.
+            </p>
+            <Ablation />
+            <p>
+              It does not. The terse-only prefix suppresses the over-asking but recovers only about a quarter of GLM's +0.099, and it pushes
+              the model the wrong way on the moves that matter: it stops asking questions, but it also stops knowing when this developer
+              <em> pushes back</em>, so its critical recall falls instead of rising. The other three-quarters of the gain is the developer's
+              actual behavior, which only the real profile carries.
+            </p>
+            <p>
+              So the cleanest account of the whole picture: a profile is not extra knowledge bolted on; it is one specific developer's
+              behavior that the simulator can imitate. It pays off only when two things hold at once. The model has to be <em>wrong in a
+              fixable way</em> (GLM was a weak, generic-sounding simulator out of the box, with the most room of any general model), and it
+              has to actually <em>adopt the persona</em> (GLM is highly steerable; Claude-Opus-4.8 barely shifts, so it barely gains). Models
+              that were already accurate from the conversation alone, GPT-5.5 and Gemini-3.1-Pro, have nothing to fix, and any prefix, persona
+              or generic, only gets in their way.
+            </p>
+          </Section>
         </div>
 
         <footer className="mt-12 border-t border-zinc-200 pt-6 text-xs text-zinc-400">
