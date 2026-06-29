@@ -112,8 +112,8 @@ function Leaderboard() {
   );
 }
 // diverging "profile effect" bars: how much CondAgree moves when the profile is added
-function ProfileEffect() {
-  const rows = MODELS.map((m) => ({ ...m, d: +(m.wp.ca - m.np.ca).toFixed(3) })).sort((a, b) => b.d - a.d);
+function ProfileEffect({ exclude = [] }: { exclude?: string[] }) {
+  const rows = MODELS.filter((m) => !exclude.includes(m.id)).map((m) => ({ ...m, d: +(m.wp.ca - m.np.ca).toFixed(3) })).sort((a, b) => b.d - a.d);
   const MAX = 0.1;
   return (
     <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
@@ -448,10 +448,10 @@ export default function Page() {
               helps the purpose-built OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, which lifts it from
               below the lucky-guess line to above; osim-8b +0.049) and <span className="font-semibold text-teal-700">GLM-5.2 (+0.084, the
               largest gain of all)</span>. For the strongest general models it does little to nothing: gpt-5.5 about zero, gemini-3.1-pro
-              −0.019, deepseek-v3.1 −0.024, since they already read the situation from the conversation alone. With CIs of ±0.06–0.15 at
+              −0.019, since they already read the situation from the conversation alone. With CIs of ±0.06–0.15 at
               n=20, treat individual lifts as suggestive, not settled.
             </p>
-            <ProfileEffect />
+            <ProfileEffect exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
             <p>
               So the headline average hides the real story: the profile is doing different jobs for different models. The next section takes
               one developer and three of these simulators to show exactly what those jobs are.
