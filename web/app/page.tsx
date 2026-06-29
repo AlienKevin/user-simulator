@@ -642,7 +642,7 @@ export default function Page() {
           <Section n="05" id="results" title="the results" dek="profile helps the small simulators, but does little for the strongest general models, except for GLM-5.2.">
             <p>
               Start with the baseline: how good is each model as a user-simulator with no profile at all? Ranked by no-profile CondAgree,
-              GPT-5.5 and Gemini-3.1-Pro lead (around 0.52 to 0.55) and every general model clears the 0.419 chance line; the small purpose-built
+              GPT-5.5 and Gemini-3.1-Pro lead (around 0.52 to 0.55) and every general model clears the 0.419 chance line; the small
               OSim simulators trail, with OSim-4B the only one below it. Note where GLM-5.2 sits: mid-pack at 0.46, one of the weaker general
               simulators out of the box. Hold that thought.
             </p>
