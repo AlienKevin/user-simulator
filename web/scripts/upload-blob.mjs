@@ -41,7 +41,7 @@ for (const f of files) {
 
 const index = {
   dataset: "UserSimBench — CondAgree, 9 models, repo-disjoint SWE-chat test split",
-  generated_from: "https://github.com/AlienKevin/user-simulator (bench/profileopt)",
+  generated_from: "website: github.com/AlienKevin/user-simulator (web/) · benchmark code: private repo AlienKevin/user.skill @ swesimbench (available on request)",
   metric: "CondAgree = per-developer fraction of held-out moments where the simulator made the same 4-way move (approve/critical/directive/inquiry) the real developer made, averaged across 20 developers (macro, 95% CI). Chance baseline = lucky_guess (per-developer Sigma p^2), here 0.419.",
   taxonomy: "v2 4-way; single Haiku-4.5 judge (inter-judge kappa ~0.80).",
   split: "20-user test split, user- AND repo-disjoint from train/val.",

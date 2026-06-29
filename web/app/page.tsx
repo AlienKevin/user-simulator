@@ -9,15 +9,15 @@ const LUCKY = 0.419;
 /* ----------------------------- chart data ----------------------------- */
 type M = { id: string; label: string; note: string; kind: "general" | "specialized"; hidden?: boolean; np: { ca: number; ci: number }; wp: { ca: number; ci: number } };
 const MODELS: M[] = [
-  { id: "glm-5.2", label: "GLM-5.2", note: "reasoning · max", kind: "general", np: { ca: 0.46, ci: 0.075 }, wp: { ca: 0.559, ci: 0.075 } },
-  { id: "gpt-5.5", label: "GPT-5.5", note: "reasoning · xhigh", kind: "general", np: { ca: 0.546, ci: 0.077 }, wp: { ca: 0.53, ci: 0.101 } },
-  { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", note: "reasoning · high", kind: "general", np: { ca: 0.522, ci: 0.09 }, wp: { ca: 0.51, ci: 0.084 } },
-  { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", note: "reasoning", kind: "general", np: { ca: 0.486, ci: 0.065 }, wp: { ca: 0.509, ci: 0.081 } },
-  { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", note: "reasoning", kind: "general", hidden: true, np: { ca: 0.496, ci: 0.075 }, wp: { ca: 0.507, ci: 0.098 } },
-  { id: "claude-opus-4.8", label: "Claude-Opus-4.8", note: "reasoning · xhigh", kind: "general", np: { ca: 0.464, ci: 0.085 }, wp: { ca: 0.487, ci: 0.09 } },
-  { id: "deepseek-v3.1", label: "DeepSeek-V3.1", note: "reasoning", kind: "general", hidden: true, np: { ca: 0.511, ci: 0.075 }, wp: { ca: 0.485, ci: 0.091 } },
-  { id: "osim-8b", label: "OSim-8B", note: "purpose-built simulator", kind: "specialized", np: { ca: 0.427, ci: 0.064 }, wp: { ca: 0.476, ci: 0.072 } },
-  { id: "osim-4b", label: "OSim-4B", note: "purpose-built simulator", kind: "specialized", np: { ca: 0.388, ci: 0.064 }, wp: { ca: 0.461, ci: 0.073 } },
+  { id: "glm-5.2", label: "GLM-5.2", note: "[max]", kind: "general", np: { ca: 0.46, ci: 0.075 }, wp: { ca: 0.559, ci: 0.075 } },
+  { id: "gpt-5.5", label: "GPT-5.5", note: "[xhigh]", kind: "general", np: { ca: 0.546, ci: 0.077 }, wp: { ca: 0.53, ci: 0.101 } },
+  { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", note: "[high]", kind: "general", np: { ca: 0.522, ci: 0.09 }, wp: { ca: 0.51, ci: 0.084 } },
+  { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", note: "[low]", kind: "general", np: { ca: 0.486, ci: 0.065 }, wp: { ca: 0.509, ci: 0.081 } },
+  { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", note: "[low]", kind: "general", hidden: true, np: { ca: 0.496, ci: 0.075 }, wp: { ca: 0.507, ci: 0.098 } },
+  { id: "claude-opus-4.8", label: "Claude-Opus-4.8", note: "[xhigh]", kind: "general", np: { ca: 0.464, ci: 0.085 }, wp: { ca: 0.487, ci: 0.09 } },
+  { id: "deepseek-v3.1", label: "DeepSeek-V3.1", note: "[low]", kind: "general", hidden: true, np: { ca: 0.511, ci: 0.075 }, wp: { ca: 0.485, ci: 0.091 } },
+  { id: "osim-8b", label: "OSim-8B", note: "", kind: "specialized", np: { ca: 0.427, ci: 0.064 }, wp: { ca: 0.476, ci: 0.072 } },
+  { id: "osim-4b", label: "OSim-4B", note: "", kind: "specialized", np: { ca: 0.388, ci: 0.064 }, wp: { ca: 0.461, ci: 0.073 } },
 ];
 const MOVE_MIX = [
   { move: "directive", pct: 51.8, color: "bg-blue-400" },
@@ -143,7 +143,7 @@ function Leaderboard({ exclude = [] }: { exclude?: string[] }) {
         );
       })}
       <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
-        <span className="inline-block size-2 rounded-sm bg-violet-500 align-middle" /> purpose-built OSim simulators ·
+        <span className="inline-block size-2 rounded-sm bg-violet-500 align-middle" /> OSim simulators ·
         <span className="ml-1 inline-block size-2 rounded-sm bg-indigo-500 align-middle" /> general models. Everything clears the
         lucky-guess line except <span className="text-amber-700">OSim-4B without a profile</span>.
       </p>
@@ -175,7 +175,7 @@ function ProfileEffect({ exclude = [] }: { exclude?: string[] }) {
         );
       })}
       <p className="mt-3 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
-        The bars that reach right are the <span className="font-semibold text-violet-700">purpose-built OSim models</span> and{" "}
+        The bars that reach right are the <span className="font-semibold text-violet-700">OSim models</span> and{" "}
         <span className="font-semibold text-teal-700">GLM-5.2</span>. The strongest general models sit on the center line or just left of it:
         a profile gives them almost nothing.
       </p>
@@ -305,7 +305,7 @@ function Baseline({ exclude = [] }: { exclude?: string[] }) {
       })}
       <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
         <span className="inline-block size-2 rounded-sm bg-indigo-400 align-middle" /> general models ·
-        <span className="ml-1 inline-block size-2 rounded-sm bg-violet-400 align-middle" /> purpose-built OSim. Before any profile, the general
+        <span className="ml-1 inline-block size-2 rounded-sm bg-violet-400 align-middle" /> OSim. Before any profile, the general
         frontier models are the better simulators and the small OSim models trail; <span className="text-amber-700">OSim-4B</span> is the only one
         below the chance line. (CIs overlap, so the top of the ranking is a cluster, not a clean winner.)
       </p>
@@ -388,7 +388,7 @@ function EvalVisual() {
       </div>
       <div className="mt-3 border-t border-zinc-200 pt-2 text-center text-[11px] text-zinc-500">
         <Mono className="text-zinc-700">20 developers × ≤30 moments = 480</Mono> × <Mono className="text-zinc-700">2 conditions</Mono> × <Mono className="text-zinc-700">9 simulators</Mono> = <Mono className="font-semibold text-zinc-900">8,640 generations</Mono>
-        <div className="mt-1 text-[10px] text-zinc-400">7 general via OpenRouter · 2 purpose-built (osim-4b/8b) via Modal</div>
+        <div className="mt-1 text-[10px] text-zinc-400">7 general via OpenRouter · 2 (osim-4b/8b) via Modal</div>
       </div>
     </div>
   );
@@ -483,7 +483,7 @@ const CASES = [
     generic: ["“Run the grep command to verify no matches are found, and if it's clean, go ahead and commit the changes with a descriptive message.”", "directive (MATCH)"],
     reads: "without the profile it just gives the next instruction; with it, the persona prefix distracts it into leaking the task framing." },
   { name: "osim-4b", up: true, effect: "+0.33 here (0.267 → 0.600) · big net positive but noisy (111 wins / 73 losses)",
-    mechanism: "A small purpose-built simulator whose default failure is sycophancy: it rubber-stamps whatever the agent claims. The profile breaks that habit, so when the agent declares success it objects the way Victor does.",
+    mechanism: "A small simulator whose default failure is sycophancy: it rubber-stamps whatever the agent claims. The profile breaks that habit, so when the agent declares success it objects the way Victor does.",
     agent: "“All changes are complete and tests pass… Good job!” (claims success)",
     real: ["“I am discarding all those changes, I don't like this approach”", "critical"],
     profile: ["“fix mise run lint” (terse, demanding, like the real developer)", "critical (MATCH)"],
@@ -573,7 +573,7 @@ const SECTIONS = [
   { id: "eval", n: "02", title: "the eval", dek: "20 test developers, 480 held-out moments, each simulator writes the developer's next message, with and without a profile.",
     paragraphs: [
       "We run the eval on the 20 test developers. For each one we pick up to 30 held-out moments (points in a real session where the developer actually spoke next) for 480 prediction points total. At each moment the simulator sees the real conversation up to that point: the coding agent's latest turn plus the history. Its job is to write what the developer says next. It never sees the message it is scored against.",
-      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 9 simulators and have each generate all 480 moments in both conditions: 480 × 2 × 9 = 8,640 generations, one trial per cell, no resampling. Seven are general models served via OpenRouter at fixed reasoning efforts; two are small purpose-built simulators, osim-4b and osim-8b, served via Modal. The next sections cover how we grade what comes back.",
+      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 9 simulators and have each generate all 480 moments in both conditions: 480 × 2 × 9 = 8,640 generations, one trial per cell, no resampling. Seven are general models served via OpenRouter at fixed reasoning efforts; two are small simulators, osim-4b and osim-8b, served via Modal. The next sections cover how we grade what comes back.",
     ], visual: <EvalVisual /> },
   { id: "moves", n: "03", title: "the moves", dek: "we grade the speech-act, not the wording, just four moves under a fault-first rule.",
     paragraphs: [
@@ -639,7 +639,7 @@ export default function Page() {
           ))}
 
           {/* RESULTS: the profile effect */}
-          <Section n="05" id="results" title="the results" dek="profile helps the small purpose-built simulators, but does little for the strongest general models, except for GLM-5.2.">
+          <Section n="05" id="results" title="the results" dek="profile helps the small simulators, but does little for the strongest general models, except for GLM-5.2.">
             <p>
               Start with the baseline: how good is each model as a user-simulator with no profile at all? Ranked by no-profile CondAgree,
               GPT-5.5 and Gemini-3.1-Pro lead (around 0.52 to 0.55) and every general model clears the 0.419 chance line; the small purpose-built
@@ -650,7 +650,7 @@ export default function Page() {
             <p>
               The rest of this section asks the sharper question: what does adding the developer's profile change? The chart below plots each
               model's profile effect, the change in CondAgree when the developer's profile is added. A profile clearly
-              helps the purpose-built OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, which lifts it from
+              helps the OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, which lifts it from
               below the lucky-guess line to above; osim-8b +0.049) and, most of all, <span className="font-semibold text-teal-700">GLM-5.2
               (+0.099)</span>, which vaults it from mid-pack to the top of the leaderboard. For the strongest general models it does nothing or
               slightly hurts: gpt-5.5 −0.016, gemini-3.1-pro −0.012, since they already read the situation from the conversation alone. With CIs
@@ -723,7 +723,7 @@ export default function Page() {
           SWESimBench · CondAgree on real{" "}
           <a href="https://huggingface.co/datasets/SALT-NLP/SWE-chat" className="hover:text-zinc-700">SWE-chat</a> sessions ·
           <a href="/data" className="hover:text-zinc-700"> download the data</a> ·
-          built on <a href="https://github.com/AlienKevin/user-simulator" className="hover:text-zinc-700">user.skill</a>.
+          built on <a href="https://github.com/cooperbench/user.skill" className="hover:text-zinc-700">cooperbench/user.skill</a>.
         </footer>
       </main>
     </div>

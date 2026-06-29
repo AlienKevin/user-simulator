@@ -104,13 +104,28 @@ curl -s ${files.find((f) => f.name === "raw.jsonl")?.url} \\   # every generatio
         </section>
 
         <section className="mt-6 border-t border-zinc-200 pt-6">
-          <p className="max-w-3xl text-xs leading-relaxed text-zinc-500">
-            <span className="font-semibold text-zinc-600">Reproduce:</span> code at{" "}
-            <a href="https://github.com/AlienKevin/user-simulator" className="text-blue-700 hover:underline">AlienKevin/user-simulator</a>{" "}
-            (<span className="font-mono">bench/profileopt</span>). Prompts are reconstructable from <span className="font-mono">points.jsonl</span> +
-            each developer’s <span className="font-mono">users/&lt;slug&gt;/</span> folder at <span className="font-mono">manifest.git_sha</span>{" "}
-            via <span className="font-mono">validate.build_prompt</span> / <span className="font-mono">osim_backend.build_osim_messages</span>.
-            License: data derives from public <a href="https://huggingface.co/datasets/SALT-NLP/SWE-chat" className="text-blue-700 hover:underline">SWE-chat</a> (ODC-BY).
+          <h3 className="mb-2 text-sm font-semibold text-zinc-900">Where everything lives</h3>
+          <ul className="max-w-3xl space-y-1.5 text-xs leading-relaxed text-zinc-500">
+            <li>
+              <span className="font-semibold text-zinc-600">Website:</span> this site, open source at{" "}
+              <a href="https://github.com/AlienKevin/user-simulator" className="text-blue-700 hover:underline">github.com/AlienKevin/user-simulator</a>{" "}
+              (a Next.js static export under <span className="font-mono">web/</span>).
+            </li>
+            <li>
+              <span className="font-semibold text-zinc-600">Benchmark code:</span> the eval harness, the 4-way move taxonomy + judge, the
+              analysis and ablation scripts, and the Modal serving for the OSim models. Kept in a private repo
+              (<span className="font-mono">AlienKevin/user.skill</span>, <span className="font-mono">swesimbench</span> branch); available on request.
+            </li>
+            <li>
+              <span className="font-semibold text-zinc-600">Data:</span> everything on this page, public on Vercel Blob: the files above plus
+              the machine-readable index.
+            </li>
+          </ul>
+          <p className="mt-3 max-w-3xl text-xs leading-relaxed text-zinc-500">
+            Prompts are reconstructable from <span className="font-mono">points.jsonl</span> + each developer’s{" "}
+            <span className="font-mono">users/&lt;slug&gt;/</span> folder at <span className="font-mono">manifest.git_sha</span> via{" "}
+            <span className="font-mono">validate.build_prompt</span> / <span className="font-mono">osim_backend.build_osim_messages</span>. Data
+            derives from public <a href="https://huggingface.co/datasets/SALT-NLP/SWE-chat" className="text-blue-700 hover:underline">SWE-chat</a> (ODC-BY).
           </p>
         </section>
 
