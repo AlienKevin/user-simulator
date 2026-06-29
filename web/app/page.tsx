@@ -608,7 +608,7 @@ export default function Page() {
         <div className="py-12">
           <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">one metric: CondAgree · 9 simulators</div>
           <h2 className="mt-2 text-3xl font-semibold leading-tight tracking-tight text-zinc-900">
-            Does a user profile make a simulator behave like the real developer?
+            SWESimBench: how well can a model simulate a software engineer using a coding agent?
           </h2>
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-zinc-700">
             A <span className="font-semibold text-zinc-900">user simulator</span> stands in for the human developer so we can stress-test
