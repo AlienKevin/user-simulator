@@ -675,3 +675,36 @@ plot 1
 
 could you add another chart to the results section to analyze agree rate across the 4 categories? I like the analysis in 1, could also extend to other models.
 
+### Prompt 109
+
+can you then add another chart + explanation on verbosity changes. Then, think even deeper about why GLM-5.2 was helped by the profile so much
+
+### Prompt 110
+
+add a chart and explanation to compare model performance without profile at the start of https://with-user.vercel.app/#results
+
+### Prompt 111
+
+yes please run the ablation and then update the website's narrative to illustrate the results you discovered!
+
+### Prompt 112
+
+<task-notification>
+<task-id>acondagree-drops-develope-fd82f7c7a0861844</task-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Agent ""CondAgree drops developers with no
+  scorable ou…" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message ...
+
+### Prompt 113
+
+<task-notification>
+<task-id>boohe2rr5</task-id>
+<tool-use-id>toolu_0147frrHYUR3iLTettrGLmXG</tool-use-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Background command "cd /Users/kevin/Dev/user.skill
+python3 bench/profileopt/ablation_style.py &gt; bench/profileopt/ablation.log 2&gt;&amp;1
+echo "EXIT=$?"; sed -n '/ABLATION/,$p' bench/profileopt/ablation.log" completed (exit co...
+

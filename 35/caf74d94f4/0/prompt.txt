@@ -133,7 +133,7 @@ first verify you have access to Modal
 <status>completed</status>
 <summary>Background command "cat &gt; /tmp/warm_osim.sh &lt;&lt;'EOF'
 #!/bin/bash
-KEY="REDACTED"
+KEY="osim-eval-key"
 declare -A URL=( [8b]="https://kevinli020508--osim-eval-serve-8b.modal.run/v1/models" [4b]="https://kevinli020508--osim-eval-serve-4b.modal.run/v1/models" )
 deadline=$(( $(date +%s) + 1080 ))   # 18 min budget
 declare -A ready=( [8b]=0 [4b]=0 )
@@ -1025,3 +1025,62 @@ plot 1
 ---
 
 could you add another chart to the results section to analyze agree rate across the 4 categories? I like the analysis in 1, could also extend to other models.
+
+---
+
+can you then add another chart + explanation on verbosity changes. Then, think even deeper about why GLM-5.2 was helped by the profile so much
+
+---
+
+add a chart and explanation to compare model performance without profile at the start of https://with-user.vercel.app/#results
+
+---
+
+yes please run the ablation and then update the website's narrative to illustrate the results you discovered!
+
+---
+
+<task-notification>
+<task-id>acondagree-drops-develope-fd82f7c7a0861844</task-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Agent ""CondAgree drops developers with no
+  scorable ou…" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Task: explain what "a step is not scorable" means and what's needed to always score the full 20-developer test split.
+
+**What "not scorable" means.** A prediction point is scored only if the simulator's generated message can be turned into a 4-way move. It can't be when the generation is an **`Error:` string (a failed API call)**, empty, or something the Haiku judge returns no category for (also, rarely, if the *real* message is unlabelable). Unscorable points are skipped; a developer falls out of a cell's average only when **all** of their points are unscorable.
+
+**The actual cause here is not subtle — it's stale failed generations.** The dropped GLM-5.2 developers are 100% `ERROR_GEN`:
+- `glm-5.2/distilled` → alishakawaguchi (18 pts), toothbrush (13), gregszero (8) all errored → **n=17**
+- `glm-5.2/generic` → gregszero (8) all errored → **n=19**
+
+These are leftovers from the **OpenRouter daily-cap 403 window** mid-run: the calls returned `Error: HTTP 4xx`, that string got cached, and those points were never regenerated. It's widespread, not GLM-only — **922 failed generations are still cached** across the reasoning models:
+
+| model | failed gens |
+|---|---|
+| GPT-5.5 | 275 / 960 |
+| GLM-5.2 | 259 / 960 |
+| Claude-Opus-4.8 | 198 / 960 |
+| Gemini-3.1-Pro | 184 / 960 |
+| DeepSeek-V3.1 | 6 / 960 |
+
+So every reasoning-model cell is currently scored on fewer than 480 points, and three developers vanish entirely from GLM with-profile.
+
+**To always score the full 20:** regenerate those 922 failed gens (the cap is lifted now), re-label them with Haiku, and recompute `summary.json`. That restores all 20 developers in every cell — and **will move the headline numbers** (GLM's +0.084 in particular, since the three missing developers, including low-sample ones, re-enter).
+
+I did **not** run the backfill: it appends to the same `raw.jsonl` / `summary.json` that the parent's in-flight contrastive-prefix ablation is using, so doing it concurrently risks a write race. It should be run serially by the main thread (scrub `Error:`/empty gens → regenerate → relabel → recompute). No files changed.</result>
+<usage><subagent_tokens>563710</subagent_tokens><tool_uses>203</tool_uses><duration_ms>271012</duration_ms></usage>
+</task-notification>
+
+---
+
+<task-notification>
+<task-id>boohe2rr5</task-id>
+<tool-use-id>toolu_0147frrHYUR3iLTettrGLmXG</tool-use-id>
+<output-file>REDACTED.output</output-file>
+<status>completed</status>
+<summary>Background command "cd /Users/kevin/Dev/user.skill
+python3 bench/profileopt/ablation_style.py &gt; bench/profileopt/ablation.log 2&gt;&amp;1
+echo "EXIT=$?"; sed -n '/ABLATION/,$p' bench/profileopt/ablation.log" completed (exit code 0)</summary>
+</task-notification>
