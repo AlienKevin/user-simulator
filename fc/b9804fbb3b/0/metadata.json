@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "fcb9804fbb3b",
+  "session_id": "da864ebe-6204-4f1a-bc7e-e1ee4da86833",
+  "strategy": "manual-commit",
+  "created_at": "2026-07-01T21:12:57.73432Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "web/app/data/page.tsx",
+    "web/scripts/upload-blob.mjs",
+    "web/app/data/blobs.json"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "b167566681da",
+  "token_usage": {
+    "input_tokens": 134722,
+    "cache_creation_tokens": 10482030,
+    "cache_read_tokens": 410549886,
+    "output_tokens": 1456926,
+    "api_call_count": 801
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-07-01T21:12:54.854283Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 9,
+    "human_removed": 0,
+    "total_committed": 0,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-kevin-Dev/da864ebe-6204-4f1a-bc7e-e1ee4da86833.jsonl"
+}
