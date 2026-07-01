@@ -11,7 +11,8 @@ type M = { id: string; label: string; note: string; kind: "general" | "specializ
 const MODELS: M[] = [
   { id: "glm-5.2", label: "GLM-5.2", note: "[max]", kind: "general", np: { ca: 0.46, ci: 0.075 }, wp: { ca: 0.559, ci: 0.075 } },
   { id: "gpt-5.5", label: "GPT-5.5", note: "[xhigh]", kind: "general", np: { ca: 0.546, ci: 0.077 }, wp: { ca: 0.53, ci: 0.101 } },
-  { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", note: "[high]", kind: "general", np: { ca: 0.522, ci: 0.09 }, wp: { ca: 0.51, ci: 0.084 } },
+  { id: "gemini-3.5-flash", label: "Gemini-3.5-Flash", note: "[high]", kind: "general", np: { ca: 0.482, ci: 0.09 }, wp: { ca: 0.515, ci: 0.096 } },
+  { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", note: "[high]", kind: "general", hidden: true, np: { ca: 0.522, ci: 0.09 }, wp: { ca: 0.51, ci: 0.084 } },
   { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", note: "[max]", kind: "general", np: { ca: 0.487, ci: 0.089 }, wp: { ca: 0.526, ci: 0.076 } },
   { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", note: "[low]", kind: "general", hidden: true, np: { ca: 0.496, ci: 0.075 }, wp: { ca: 0.507, ci: 0.098 } },
   { id: "claude-opus-4.8", label: "Claude-Opus-4.8", note: "[xhigh]", kind: "general", np: { ca: 0.464, ci: 0.085 }, wp: { ca: 0.487, ci: 0.09 } },
@@ -37,6 +38,7 @@ const CAT = {
     { id: "claude-opus-4.8", label: "Claude-Opus-4.8", d: { approve: 0.0, critical: -0.026, directive: 0.064, inquiry: -0.023 }, wp: { approve: 0.155, critical: 0.451, directive: 0.681, inquiry: 0.077 } },
     { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", d: { approve: 0.069, critical: -0.047, directive: 0.052, inquiry: 0.1 }, wp: { approve: 0.397, critical: 0.248, directive: 0.782, inquiry: 0.125 } },
     { id: "deepseek-v4-flash", label: "DeepSeek-V4-Flash", d: { approve: 0.138, critical: 0.03, directive: -0.04, inquiry: 0.028 }, wp: { approve: 0.345, critical: 0.271, directive: 0.742, inquiry: 0.128 } },
+    { id: "gemini-3.5-flash", label: "Gemini-3.5-Flash", d: { approve: -0.19, critical: 0.053, directive: 0.06, inquiry: 0.0 }, wp: { approve: 0.241, critical: 0.248, directive: 0.806, inquiry: 0.075 } },
     { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", d: { approve: 0.034, critical: -0.037, directive: -0.004, inquiry: 0.0 }, wp: { approve: 0.362, critical: 0.226, directive: 0.806, inquiry: 0.025 } },
     { id: "deepseek-v3.1", label: "DeepSeek-V3.1", d: { approve: 0.121, critical: 0.053, directive: -0.085, inquiry: -0.025 }, wp: { approve: 0.328, critical: 0.211, directive: 0.77, inquiry: 0.075 } },
     { id: "gpt-5.5", label: "GPT-5.5", d: { approve: -0.017, critical: -0.06, directive: -0.009, inquiry: 0.025 }, wp: { approve: 0.328, critical: 0.286, directive: 0.81, inquiry: 0.075 } },
@@ -55,6 +57,7 @@ const VERB = {
     { id: "gpt-5.5", label: "GPT-5.5", kind: "general", np: 21.4, wp: 11.0 },
     { id: "deepseek-v4-pro", label: "DeepSeek-V4-Pro", kind: "general", np: 16.9, wp: 7.9 },
     { id: "gemini-3.1-pro", label: "Gemini-3.1-Pro", kind: "general", np: 15.9, wp: 10.0 },
+    { id: "gemini-3.5-flash", label: "Gemini-3.5-Flash", kind: "general", np: 16.4, wp: 12.1 },
   ],
 };
 
@@ -229,7 +232,7 @@ function CategoryAgree({ exclude = [] }: { exclude?: string[] }) {
       <p className="mt-3 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
         <span className="font-semibold text-teal-700">GLM-5.2</span> is the only model that improves on every move (its row is all green). The{" "}
         <span className="font-semibold text-violet-700">OSim</span> models gain on approve, critical, and directive but lose on the rare inquiry,
-        as the profile stops them over-asking. The strongest general models (GPT-5.5, Gemini-3.1-Pro) barely move. Columns are weighted by how
+        as the profile stops them over-asking. The strongest general model without a profile (GPT-5.5) barely moves. Columns are weighted by how
         often developers actually make each move (directive 52%, inquiry only 8%).
       </p>
     </div>
@@ -502,7 +505,7 @@ function CaseStudy() {
   return (
     <section id="case-study" className="scroll-mt-16 border-t border-zinc-200 pt-10">
       <Heading n="06" id="case-study" title="case study: one developer, three simulators, three different jobs" />
-      <p className="mt-1 max-w-2xl text-sm text-zinc-500">the profile helped GLM-5.2 and OSim-4B on <Mono>gtrrz-victor</Mono> but hurt Gemini-3.1-Pro, because it was fixing three different problems.</p>
+      <p className="mt-1 max-w-2xl text-sm text-zinc-500">the profile helped GLM-5.2 and OSim-4B on <Mono>gtrrz-victor</Mono> but hurt Gemini-3.1-Pro (an off-leaderboard run, kept in the data), because it was fixing three different problems.</p>
       <div className="mt-4 space-y-3 text-[14px] leading-relaxed text-zinc-700">
         <p>The chart shows profile lift varies by model. To see why, take one developer, <Mono>gtrrz-victor</Mono>, and watch three simulators predict his held-out moves. Same developer, same profile, opposite signs:</p>
       </div>
@@ -573,7 +576,7 @@ const SECTIONS = [
   { id: "eval", n: "02", title: "the eval", dek: "20 test developers, 480 held-out moments, each simulator writes the developer's next message, with and without a profile.",
     paragraphs: [
       "We run the eval on the 20 test developers. For each one we pick up to 30 held-out moments (points in a real session where the developer actually spoke next) for 480 prediction points total. At each moment the simulator sees the real conversation up to that point: the coding agent's latest turn plus the history. Its job is to write what the developer says next. It never sees the message it is scored against.",
-      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 7 simulators and have each generate all 480 moments in both conditions: 480 × 2 × 7 = 6,720 generations, one trial per cell, no resampling. Five are general models served via OpenRouter at fixed reasoning efforts; two are small simulators, osim-4b and osim-8b, served via Modal. (Two further DeepSeek variants were run but kept off the leaderboard; they stay in the downloadable data.) The next sections cover how we grade what comes back.",
+      "The prompt is [optional user profile] + conversation so far + task framing, and we run it two ways. WITH profile prepends a distilled persona prefix for that developer; WITHOUT uses a generic developer prompt. We freeze 7 simulators and have each generate all 480 moments in both conditions: 480 × 2 × 7 = 6,720 generations, one trial per cell, no resampling. Five are general models at fixed reasoning efforts (four via OpenRouter, gemini-3.5-flash via the direct Gemini API); two are small simulators, osim-4b and osim-8b, served via Modal. (Three further runs, two DeepSeek variants and gemini-3.1-pro, are kept off the leaderboard; all stay in the downloadable data.) The next sections cover how we grade what comes back.",
     ], visual: <EvalVisual /> },
   { id: "moves", n: "03", title: "the moves", dek: "we grade the speech-act, not the wording, just four moves under a fault-first rule.",
     paragraphs: [
@@ -622,9 +625,8 @@ export default function Page() {
             <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-400">key takeaways</div>
             <ul className="mt-2 space-y-2 text-[13.5px] leading-relaxed text-zinc-700">
               <li>
-                <span className="font-semibold text-zinc-900">The top is a cluster, not a winner.</span> With no profile, GPT-5.5 and
-                Gemini-3.1-Pro lead at around 0.52 to 0.55 and every general model clears the 0.419 chance line; overlapping CIs make the
-                leaders a cluster. The small OSim simulators trail, with OSim-4B the only one below chance.
+                <span className="font-semibold text-zinc-900">The top is a cluster, not a winner.</span> With no profile, GPT-5.5 leads at 0.546
+                and every general model clears the 0.419 chance line; overlapping CIs make the leaders a cluster. The small OSim simulators trail, with OSim-4B the only one below chance.
               </li>
               <li>
                 <span className="font-semibold text-zinc-900">A developer profile is the real lever, but only for some.</span> It barely
@@ -660,7 +662,7 @@ export default function Page() {
 
         <div className="space-y-10">
           <Section id="leaderboard" title="SWESimBench Leaderboard">
-            <Leaderboard exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <Leaderboard exclude={["deepseek-v3.1", "deepseek-v4-flash", "gemini-3.1-pro"]} />
           </Section>
 
           {SECTIONS.map((s) => (
@@ -674,11 +676,11 @@ export default function Page() {
           <Section n="05" id="results" title="the results" dek="profile helps the small simulators, but does little for the strongest general models, except for GLM-5.2.">
             <p>
               Start with the baseline: how good is each model as a user-simulator with no profile at all? Ranked by no-profile accuracy,
-              GPT-5.5 and Gemini-3.1-Pro lead (around 0.52 to 0.55) and every general model clears the 0.419 chance line; the small
+              GPT-5.5 leads (0.546) and every general model clears the 0.419 chance line; the small
               OSim simulators trail, with OSim-4B the only one below it. Note where GLM-5.2 sits: mid-pack at 0.46, one of the weaker general
               simulators out of the box. Hold that thought.
             </p>
-            <Baseline exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <Baseline exclude={["deepseek-v3.1", "deepseek-v4-flash", "gemini-3.1-pro"]} />
             <p>
               Before the profile question, one lever that turns out <em>not</em> to matter for this task: reasoning effort. Each general model
               runs at a fixed effort (the bracket after its name), so to isolate that lever we re-ran DeepSeek-V4-Pro at maximum effort with the
@@ -695,20 +697,20 @@ export default function Page() {
               helps the OSim models (<span className="font-semibold text-violet-700">osim-4b +0.073</span>, which lifts it from
               below the lucky-guess line to above; osim-8b +0.049) and, most of all, <span className="font-semibold text-teal-700">GLM-5.2
               (+0.099)</span>, which vaults it from mid-pack to the top of the leaderboard. For the strongest general models it does nothing or
-              slightly hurts: gpt-5.5 −0.016, gemini-3.1-pro −0.012, since they already read the situation from the conversation alone. With CIs
+              slightly hurts: gpt-5.5 −0.016 (and the off-leaderboard gemini-3.1-pro −0.012), since they already read the situation from the conversation alone. With CIs
               of ±0.06–0.15 at n=20, treat individual lifts as suggestive, not settled.
             </p>
-            <ProfileEffect exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <ProfileEffect exclude={["deepseek-v3.1", "deepseek-v4-flash", "gemini-3.1-pro"]} />
             <p>
               That single number hides where the lift comes from. Breaking the agree-rate down by the kind of move the developer made shows
               each model's profile is doing something different, move by move, the clearest tell for <em>why</em> it helps.
             </p>
-            <CategoryAgree exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <CategoryAgree exclude={["deepseek-v3.1", "deepseek-v4-flash", "gemini-3.1-pro"]} />
             <p>
               One more lens: how much each simulator <em>says</em>. Without a profile, the simulators that gain most are also the wordiest, and
               the profile collapses them toward a real developer's terse style.
             </p>
-            <Verbosity exclude={["deepseek-v3.1", "deepseek-v4-flash"]} />
+            <Verbosity exclude={["deepseek-v3.1", "deepseek-v4-flash", "gemini-3.1-pro"]} />
             <p>
               So the headline average hides the real story: the profile is doing different jobs for different models. The next section takes
               one developer and three of these simulators to show exactly what those jobs are.
