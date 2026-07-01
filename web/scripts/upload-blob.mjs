@@ -12,7 +12,7 @@ const files = [
   { local: `${SRC}/experiments/condagree_multi/summary.json`, name: "summary.json", ct: "application/json",
     desc: "Headline results: per (model, condition) next-action prediction accuracy (macro) mean + 95% CI + per-user array; lucky_guess line; real move distribution." },
   { local: `${SRC}/experiments/condagree_multi/manifest.json`, name: "manifest.json", ct: "application/json",
-    desc: "Experiment config: the 9 models with OpenRouter ids + reasoning efforts + concurrency, split file, taxonomy, judge model, n_per_user, n_points, git sha, timestamp." },
+    desc: "Experiment config: the 10 models with backend ids (OpenRouter / Gemini API / Modal) + reasoning efforts + concurrency, split file, taxonomy, judge model, n_per_user, n_points, git sha, timestamp." },
   { local: `${SRC}/experiments/condagree_multi/taxonomy.json`, name: "taxonomy.json", ct: "application/json",
     desc: "The v2 4-way move taxonomy: categories (approve/critical/directive/inquiry), the exact classifier prompt body, OLD->NEW remap from the legacy 7-way, and inter-judge kappa." },
   { local: `${SRC}/splits.json`, name: "splits.json", ct: "application/json",
@@ -24,7 +24,7 @@ const files = [
   { local: `${SRC}/experiments/condagree_multi/cases.json`, name: "cases.json", ct: "application/json",
     desc: "Case-study data for glm-5.2 / gemini-3.1-pro / osim-4b: per-developer accuracy ±profile (delta), and every moment where the profile flipped the move (with the agent turn, real message+move, and both ±profile generations+moves)." },
   { local: `${SRC}/experiments/condagree_multi/category_recall.json`, name: "category_recall.json", ct: "application/json",
-    desc: "Per-move agree-rate (recall) for all 9 models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap." },
+    desc: "Per-move agree-rate (recall) for all models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap." },
   { local: `${SRC}/experiments/condagree_multi/verbosity.json`, name: "verbosity.json", ct: "application/json",
     desc: "Average + median message length (words) per model, both conditions, vs the real developers; plus each model's accuracy no-profile/with-profile. Drives the verbosity chart." },
   { local: `${SRC}/experiments/condagree_multi/ablation.json`, name: "ablation.json", ct: "application/json",
@@ -40,7 +40,7 @@ for (const f of files) {
 }
 
 const index = {
-  dataset: "SWESimBench — next-action prediction accuracy; 7 leaderboard simulators (raw includes 2 hidden DeepSeek variants, 9 model conditions), repo-disjoint SWE-chat test split",
+  dataset: "SWESimBench — next-action prediction accuracy; 7 leaderboard simulators (raw includes 2 hidden DeepSeek variants + gemini-3.5-flash, 10 model conditions), repo-disjoint SWE-chat test split",
   generated_from: "website: github.com/AlienKevin/user-simulator (web/) · benchmark code: private repo AlienKevin/user.skill @ swesimbench (available on request)",
   metric: "next-action prediction accuracy = per-developer fraction of held-out moments where the simulator made the same 4-way next action (approve/critical/directive/inquiry) the real developer took, averaged across 20 developers (macro, 95% CI). Chance baseline = lucky_guess (per-developer Sigma p^2), here 0.419.",
   taxonomy: "v2 4-way; single Haiku-4.5 judge (inter-judge kappa ~0.80).",

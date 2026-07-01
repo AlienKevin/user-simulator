@@ -4,14 +4,14 @@
   {
    "name": "summary.json",
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/summary.json",
-   "bytes": 6928,
+   "bytes": 7641,
    "description": "Headline results: per (model, condition) next-action prediction accuracy (macro) mean + 95% CI + per-user array; lucky_guess line; real move distribution."
   },
   {
    "name": "manifest.json",
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/manifest.json",
-   "bytes": 1983,
-   "description": "Experiment config: the 9 models with OpenRouter ids + reasoning efforts + concurrency, split file, taxonomy, judge model, n_per_user, n_points, git sha, timestamp."
+   "bytes": 2112,
+   "description": "Experiment config: the 10 models with backend ids (OpenRouter / Gemini API / Modal) + reasoning efforts + concurrency, split file, taxonomy, judge model, n_per_user, n_points, git sha, timestamp."
   },
   {
    "name": "taxonomy.json",
@@ -34,7 +34,7 @@
   {
    "name": "raw.jsonl",
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/raw.jsonl",
-   "bytes": 5410976,
+   "bytes": 6893514,
    "description": "Every trial (one JSON per line). Generation: {key, kind:'gen', point_id, slug, model, model_id, backend, effort, cond('distilled'|'generic'), text, ts, seed?}. Move label: {key:'lab:haiku:<hash>', move}. Join gens to labels via the 4-way classifier on (prev_agent, text)."
   },
   {
@@ -47,7 +47,7 @@
    "name": "category_recall.json",
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/category_recall.json",
    "bytes": 4237,
-   "description": "Per-move agree-rate (recall) for all 9 models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap."
+   "description": "Per-move agree-rate (recall) for all models, both conditions: of moments whose real move was X, the fraction the sim matched. Includes the profile delta per category. Drives the by-category heatmap."
   },
   {
    "name": "verbosity.json",
