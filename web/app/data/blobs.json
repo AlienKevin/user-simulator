@@ -60,6 +60,12 @@
    "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/ablation.json",
    "bytes": 2227,
    "description": "Contrastive-prefix ablation for glm-5.2 + gpt-5.5: accuracy under no-profile vs the real persona vs a content-free terse style prefix, with spurious-inquiry rate, word count, and per-move recall."
+  },
+  {
+   "name": "scaling_context.json",
+   "url": "https://wykde3bdnvkojpef.public.blob.vercel-storage.com/data/condagree_multi/scaling_context.json",
+   "bytes": 12819,
+   "description": "Context-window ablation for gemini-3.5-flash (no profile): accuracy per N=1..10 prior session turns plus the full 14-turn anchor, per-developer values, on all 480 moments and the 166-moment constant-dose (>=10 prior turns) subset. Drives the context-window chart."
   }
  ],
  "models": [

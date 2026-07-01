@@ -29,6 +29,8 @@ const files = [
     desc: "Average + median message length (words) per model, both conditions, vs the real developers; plus each model's accuracy no-profile/with-profile. Drives the verbosity chart." },
   { local: `${SRC}/experiments/condagree_multi/ablation.json`, name: "ablation.json", ct: "application/json",
     desc: "Contrastive-prefix ablation for glm-5.2 + gpt-5.5: accuracy under no-profile vs the real persona vs a content-free terse style prefix, with spurious-inquiry rate, word count, and per-move recall." },
+  { local: `${SRC}/experiments/condagree_multi/scaling_context.json`, name: "scaling_context.json", ct: "application/json",
+    desc: "Context-window ablation for gemini-3.5-flash (no profile): accuracy per N=1..10 prior session turns plus the full 14-turn anchor, per-developer values, on all 480 moments and the 166-moment constant-dose (>=10 prior turns) subset. Drives the context-window chart." },
 ];
 
 const uploaded = [];

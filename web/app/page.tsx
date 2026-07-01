@@ -341,6 +341,60 @@ function Ablation() {
   );
 }
 
+// context-window scaling: accuracy vs number of prior session turns shown (gemini-3.5-flash, no profile)
+const CTX = {
+  ns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  all: { acc: [0.478, 0.463, 0.46, 0.497, 0.492, 0.509, 0.516, 0.527, 0.518, 0.497], ci: [0.079, 0.072, 0.084, 0.083, 0.077, 0.079, 0.08, 0.077, 0.083, 0.086], anchor: { acc: 0.482, ci: 0.09 } },
+  deep: { acc: [0.393, 0.396, 0.388, 0.447, 0.461, 0.449, 0.523, 0.515, 0.488, 0.454], ci: [0.148, 0.132, 0.14, 0.142, 0.145, 0.152, 0.143, 0.141, 0.169, 0.166], anchor: { acc: 0.444, ci: 0.156 } },
+};
+function ContextScaling() {
+  const W = 640, H = 240, PL = 42, PR = 16, PT = 12, PB = 30;
+  const ymin = 0.3, ymax = 0.62;
+  const X = (n: number) => PL + ((Math.log2(n) - 0) / Math.log2(14)) * (W - PL - PR);
+  const Y = (a: number) => PT + (1 - (a - ymin) / (ymax - ymin)) * (H - PT - PB);
+  const series = [
+    { d: CTX.all, color: "#6366f1", label: "all 480 moments (window capped at available turns)" },
+    { d: CTX.deep, color: "#0d9488", label: "constant-dose: 166 moments with ≥10 prior turns" },
+  ];
+  return (
+    <div className="mt-5 rounded-xl border border-zinc-200 bg-white p-5">
+      <div className="mb-1 text-xs font-semibold text-zinc-700">accuracy vs how many prior turns of the live session the simulator sees</div>
+      <div className="mb-3 text-[11px] text-zinc-400">gemini-3.5-flash, no profile · N = 1..10 sliced from the same 480 frozen moments · ◇ = the leaderboard's full 14-turn window · whisker = 95% CI</div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+        {[0.35, 0.419, 0.45, 0.5, 0.55, 0.6].map((g) => (
+          <g key={g}>
+            <line x1={PL} x2={W - PR} y1={Y(g)} y2={Y(g)} stroke={g === 0.419 ? "#71717a" : "#f4f4f5"} strokeWidth={1} strokeDasharray={g === 0.419 ? "4 3" : undefined} />
+            <text x={PL - 6} y={Y(g) + 3} textAnchor="end" fontSize={9} fill={g === 0.419 ? "#52525b" : "#a1a1aa"}>{g === 0.419 ? "chance" : g.toFixed(2)}</text>
+          </g>
+        ))}
+        {[...CTX.ns, 14].map((n) => (
+          <text key={n} x={X(n)} y={H - PB + 14} textAnchor="middle" fontSize={9} fill="#a1a1aa">{n}</text>
+        ))}
+        <text x={(PL + W - PR) / 2} y={H - 2} textAnchor="middle" fontSize={9} fill="#71717a">prior turns shown (log scale)</text>
+        {series.map((s) => (
+          <g key={s.color}>
+            <polyline fill="none" stroke={s.color} strokeWidth={1.8} points={CTX.ns.map((n, i) => `${X(n)},${Y(s.d.acc[i])}`).join(" ")} />
+            {CTX.ns.map((n, i) => (
+              <g key={n}>
+                <line x1={X(n)} x2={X(n)} y1={Y(s.d.acc[i] - s.d.ci[i])} y2={Y(s.d.acc[i] + s.d.ci[i])} stroke={s.color} strokeWidth={1} opacity={0.35} />
+                <circle cx={X(n)} cy={Y(s.d.acc[i])} r={3} fill={s.color} />
+              </g>
+            ))}
+            <line x1={X(14)} x2={X(14)} y1={Y(s.d.anchor.acc - s.d.anchor.ci)} y2={Y(s.d.anchor.acc + s.d.anchor.ci)} stroke={s.color} strokeWidth={1} opacity={0.35} />
+            <rect x={X(14) - 4} y={Y(s.d.anchor.acc) - 4} width={8} height={8} transform={`rotate(45 ${X(14)} ${Y(s.d.anchor.acc)})`} fill="white" stroke={s.color} strokeWidth={1.6} />
+          </g>
+        ))}
+      </svg>
+      <p className="mt-2 border-t border-zinc-100 pt-3 text-xs text-zinc-500">
+        <span className="inline-block size-2 rounded-sm bg-indigo-500 align-middle" /> {series[0].label} ·{" "}
+        <span className="ml-1 inline-block size-2 rounded-sm bg-teal-600 align-middle" /> {series[1].label}. Accuracy climbs to a peak around
+        7 to 8 turns on both views, then falls; the open diamonds (the full 14-turn window every leaderboard model is scored at) sit
+        significantly below the 8-turn peak.
+      </p>
+    </div>
+  );
+}
+
 /* ----------------------------- visuals -------------------------------- */
 function Box({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-[11px] leading-snug text-zinc-700 ${className}`}>{children}</div>;
@@ -593,7 +647,7 @@ const SECTIONS = [
 
 /* ------------------------------- page --------------------------------- */
 export default function Page() {
-  const nav = [["leaderboard", "leaderboard"], ["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["the results", "results"], ["case study", "case-study"], ["the ablation", "ablation"], ["the data", "data"]];
+  const nav = [["leaderboard", "leaderboard"], ["the split", "split"], ["the eval", "eval"], ["the moves", "moves"], ["the metric", "metric"], ["the results", "results"], ["case study", "case-study"], ["the ablation", "ablation"], ["context window", "context"], ["the data", "data"]];
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
@@ -643,6 +697,12 @@ export default function Page() {
                 <span className="font-semibold text-zinc-900">Reasoning effort is not a lever.</span> Doubling DeepSeek-V4-Pro's reasoning
                 budget from low to max moved accuracy within noise (+0.017 with the profile, +0.001 without); the task rewards reading the
                 situation, not deliberation.
+              </li>
+              <li>
+                <span className="font-semibold text-zinc-900">The moment beats the biography.</span> A context ablation shows accuracy climbs
+                with more turns of the live session up to about eight, then falls: the full 14-turn window scores below the 8-turn peak
+                (paired t=2.9 on the constant-dose subset). Recent context is the signal; older context, like deep cross-session history, is
+                distraction.
               </li>
               <li>
                 <span className="font-semibold text-zinc-900">Leak-free and fully public.</span> A user- and repo-disjoint test split, a single
@@ -743,13 +803,43 @@ export default function Page() {
             </p>
           </Section>
 
-          <Section n="08" id="data" title="the data: all of it is public">
+          <Section n="08" id="context" title="the context ablation: eight turns is enough, fourteen is too many" dek="a second ablation varies how much of the live session the simulator sees. Accuracy climbs to about eight prior turns, then more context starts to hurt.">
             <p>
-              Every number and chart on this page is reproducible from public trial data. Nine files cover the whole pipeline: the{" "}
+              Everything above conditions the simulator on a fixed window: the last 14 turns of the session. This ablation varies that window.
+              Using gemini-3.5-flash with no profile, we re-ran all 480 moments ten more times, showing the model only the last N turns of the
+              live session, N from 1 to 10, against the leaderboard's full 14-turn window as the anchor. Grading is unchanged, and the judge
+              always sees the agent's true latest turn, so every condition stays comparable with the leaderboard. One subtlety: a third of
+              moments sit early in their session, so we report two views. All 480 moments (where a moment with only 3 prior turns is identical
+              in every condition from N=3 up), and a constant-dose subset of the 166 moments with at least 10 prior turns, where every N
+              delivers exactly N turns.
+            </p>
+            <ContextScaling />
+            <p>
+              Both views agree, and this is the one knob in the benchmark that scales. Accuracy climbs steadily from 1 to about 8 turns:
+              r(log N, accuracy) = +0.78 on all 480 and +0.85 on the constant-dose subset, where going from 1 turn to 8 is worth{" "}
+              <span className="font-semibold text-zinc-800">+0.12 accuracy</span>. Then it turns. The full 14-turn window scores{" "}
+              <span className="font-semibold text-zinc-800">below</span> the 8-turn peak: paired per-developer +0.045 (t=2.2) on all 480 and
+              +0.072 (t=2.9) on the subset. We read the peak location off this data, so treat "eight" as approximate; the rise-then-fall shape,
+              though, replicates across both views.
+            </p>
+            <p>
+              The reading: a developer's next move is mostly determined by the recent exchange, what the agent just did and the immediate
+              back-and-forth. Turns from earlier in the session pull the simulator toward what the session was <em>about</em> rather than what
+              just <em>happened</em>. More context helps until it is older context. It also means the benchmark's own prompt leaves accuracy on
+              the table: every leaderboard row is scored at the 14-turn window. We keep that for comparability, and it is the same handicap for
+              every model, but a future version should trim the window to roughly eight turns. (It is also the counterpoint to the profile
+              story: cross-session history in the profile barely moves a strong model, while within-session context is worth twelve points on
+              the hardest subset. What a simulator needs is the moment, not the biography.)
+            </p>
+          </Section>
+
+          <Section n="09" id="data" title="the data: all of it is public">
+            <p>
+              Every number and chart on this page is reproducible from public trial data. The files cover the whole pipeline: the{" "}
               <Mono>summary</Mono> of results and the experiment <Mono>manifest</Mono>; the user- and repo-disjoint <Mono>splits</Mono> and the
-              4-way <Mono>taxonomy</Mono> with its judge prompt; the 480 frozen <Mono>points</Mono> and the <Mono>raw</Mono> log of all 9,600+
-              generations with every move label; and the <Mono>category</Mono>, <Mono>verbosity</Mono>, <Mono>cases</Mono>, and{" "}
-              <Mono>ablation</Mono> breakdowns behind each chart.
+              4-way <Mono>taxonomy</Mono> with its judge prompt; the 480 frozen <Mono>points</Mono> and the <Mono>raw</Mono> log of all
+              generations with every move label; and the <Mono>category</Mono>, <Mono>verbosity</Mono>, <Mono>cases</Mono>,{" "}
+              <Mono>ablation</Mono>, and <Mono>scaling_context</Mono> breakdowns behind each chart.
             </p>
             <div className="mt-2 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-xs leading-relaxed text-zinc-600">
